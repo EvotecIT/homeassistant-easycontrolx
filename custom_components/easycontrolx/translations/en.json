@@ -1,0 +1,156 @@
+{
+  "title": "EasyControlX",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add EasyControlX host",
+        "description": "Connect to an EasyControlX host. If you already have a token, paste it here. Otherwise leave the token blank and the integration will start pairing through the host approval flow.",
+        "data": {
+          "base_url": "Base URL",
+          "access_token": "Access token",
+          "controller_name": "Controller name"
+        }
+      },
+      "pair": {
+        "title": "Approve pairing",
+        "description": "Pairing has started for {host_name}. The EasyControlX host generated verification code {verification_code} for controller {controller_name}. Approve the pairing on the host, then submit this step again."
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate EasyControlX",
+        "description": "The stored EasyControlX token is no longer valid. Enter a fresh token for this host.",
+        "data": {
+          "access_token": "Access token"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure EasyControlX",
+        "description": "Update the connection details for this EasyControlX host.",
+        "data": {
+          "base_url": "Base URL"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to the EasyControlX host.",
+      "invalid_auth": "Authentication with the EasyControlX host failed.",
+      "pairing_expired": "The pairing session expired. Start the flow again.",
+      "pairing_failed": "The host rejected or failed the pairing request.",
+      "pairing_pending": "Pairing is still waiting for host approval.",
+      "unknown": "An unexpected error occurred."
+    },
+    "abort": {
+      "already_configured": "This EasyControlX host is already configured.",
+      "pairing_not_started": "Pairing has not been started.",
+      "reauth_successful": "EasyControlX was reauthenticated successfully.",
+      "unsupported_device": "The discovered device could not be used."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "EasyControlX options",
+        "description": "Adjust optional runtime behavior for this host.",
+        "data": {
+          "scan_interval": "Polling interval in seconds",
+          "preferred_monitor_id": "Preferred monitor ID for desktop preview"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "trusted_controllers_count": {
+        "name": "Trusted controllers"
+      },
+      "pending_pairings": {
+        "name": "Pending pairings"
+      },
+      "open_windows": {
+        "name": "Open windows"
+      },
+      "monitors": {
+        "name": "Monitors"
+      },
+      "bluetooth_devices": {
+        "name": "Bluetooth devices"
+      },
+      "processes": {
+        "name": "Processes"
+      },
+      "remote_sessions": {
+        "name": "Remote sessions"
+      },
+      "audio_summary": {
+        "name": "Audio summary"
+      },
+      "media_summary": {
+        "name": "Media summary"
+      },
+      "cpu_usage": {
+        "name": "CPU usage"
+      },
+      "memory_usage": {
+        "name": "Memory usage"
+      },
+      "uptime_seconds": {
+        "name": "Uptime"
+      },
+      "storage_volumes": {
+        "name": "Storage volumes"
+      },
+      "network_interfaces": {
+        "name": "Network interfaces"
+      },
+      "managed_services": {
+        "name": "Managed services"
+      },
+      "helper_state": {
+        "name": "Helper state"
+      }
+    },
+    "binary_sensor": {
+      "trusted_controllers": {
+        "name": "Trusted controllers"
+      },
+      "helper_ready": {
+        "name": "Helper ready"
+      },
+      "remote_sessions_active": {
+        "name": "Remote sessions active"
+      }
+    },
+    "button": {
+      "lock": {
+        "name": "Lock"
+      },
+      "sleep": {
+        "name": "Sleep"
+      },
+      "restart": {
+        "name": "Restart"
+      },
+      "shutdown": {
+        "name": "Shutdown"
+      },
+      "play_pause": {
+        "name": "Play/pause"
+      },
+      "toggle_mute": {
+        "name": "Toggle mute"
+      }
+    },
+    "switch": {
+      "managed_service": {
+        "name": "Managed service"
+      }
+    },
+    "camera": {
+      "desktop_preview": {
+        "name": "Desktop preview"
+      },
+      "active_window_preview": {
+        "name": "Active window preview"
+      }
+    }
+  }
+}

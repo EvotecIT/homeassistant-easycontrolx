@@ -1,0 +1,256 @@
+power_action:
+  name: Power action
+  description: Run a power action on an EasyControlX host.
+  fields:
+    config_entry_id:
+      name: Config entry ID
+      description: Target a specific EasyControlX host when multiple hosts are configured.
+      example: "01JABCDEF0123456789XYZ"
+      selector:
+        text:
+    action:
+      name: Action
+      description: Power action to execute on the host.
+      required: true
+      example: Lock
+      selector:
+        select:
+          options:
+            - Lock
+            - Sleep
+            - Restart
+            - Shutdown
+
+media_action:
+  name: Media action
+  description: Run a media transport action on an EasyControlX host.
+  fields:
+    config_entry_id:
+      name: Config entry ID
+      description: Target a specific EasyControlX host when multiple hosts are configured.
+      example: "01JABCDEF0123456789XYZ"
+      selector:
+        text:
+    action:
+      name: Action
+      description: Media action to execute on the host.
+      required: true
+      example: PlayPause
+      selector:
+        select:
+          options:
+            - PlayPause
+            - NextTrack
+            - PreviousTrack
+            - Pause
+
+audio_action:
+  name: Audio action
+  description: Run an audio action on an EasyControlX host.
+  fields:
+    config_entry_id:
+      name: Config entry ID
+      description: Target a specific EasyControlX host when multiple hosts are configured.
+      example: "01JABCDEF0123456789XYZ"
+      selector:
+        text:
+    action:
+      name: Action
+      description: Audio action to execute on the host.
+      required: true
+      example: ToggleMute
+      selector:
+        select:
+          options:
+            - ToggleMute
+            - MuteOutput
+            - UnmuteOutput
+            - SetOutputVolume
+    value:
+      name: Value
+      description: Output volume percentage used with SetOutputVolume.
+      example: 35
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+
+app_launch:
+  name: App launch
+  description: Launch an application or command target on an EasyControlX host.
+  fields:
+    config_entry_id:
+      name: Config entry ID
+      description: Target a specific EasyControlX host when multiple hosts are configured.
+      example: "01JABCDEF0123456789XYZ"
+      selector:
+        text:
+    target:
+      name: Target
+      description: Application path, executable name, or command target to launch.
+      required: true
+      example: notepad.exe
+      selector:
+        text:
+    arguments:
+      name: Arguments
+      description: Optional command-line arguments passed to the target.
+      example: "--new-window"
+      selector:
+        text:
+    working_directory:
+      name: Working directory
+      description: Optional working directory used for the launch request.
+      example: "C:\\Users\\Public"
+      selector:
+        text:
+
+process_action:
+  name: Process action
+  description: Run a process action on an EasyControlX host.
+  fields:
+    config_entry_id:
+      name: Config entry ID
+      description: Target a specific EasyControlX host when multiple hosts are configured.
+      example: "01JABCDEF0123456789XYZ"
+      selector:
+        text:
+    action:
+      name: Action
+      description: Process action to execute on the host.
+      required: true
+      example: CloseMainWindow
+      selector:
+        select:
+          options:
+            - CloseMainWindow
+            - Terminate
+    process_id:
+      name: Process ID
+      description: Numeric process ID to target directly.
+      example: 1234
+      selector:
+        number:
+          min: 0
+          mode: box
+    process_name:
+      name: Process name
+      description: Process executable name to target when process ID is not known.
+      example: notepad
+      selector:
+        text:
+    allow_multiple_matches:
+      name: Allow multiple matches
+      description: Allow the host to apply the action when more than one process name matches.
+      selector:
+        boolean:
+
+service_action:
+  name: Service action
+  description: Run a curated Windows service action on an EasyControlX host.
+  fields:
+    config_entry_id:
+      name: Config entry ID
+      description: Target a specific EasyControlX host when multiple hosts are configured.
+      example: "01JABCDEF0123456789XYZ"
+      selector:
+        text:
+    action:
+      name: Action
+      description: Service action to execute on the host.
+      required: true
+      example: Restart
+      selector:
+        select:
+          options:
+            - Start
+            - Stop
+            - Restart
+    service_name:
+      name: Service name
+      description: Managed Windows service name exposed by the EasyControlX host.
+      required: true
+      example: "EasyControlX Windows Agent"
+      selector:
+        text:
+
+list_processes:
+  name: List processes
+  description: Return the current process inventory from an EasyControlX host.
+  fields:
+    config_entry_id:
+      name: Config entry ID
+      description: Target a specific EasyControlX host when multiple hosts are configured.
+      example: "01JABCDEF0123456789XYZ"
+      selector:
+        text:
+
+list_services:
+  name: List services
+  description: Return the current curated Windows service inventory from an EasyControlX host.
+  fields:
+    config_entry_id:
+      name: Config entry ID
+      description: Target a specific EasyControlX host when multiple hosts are configured.
+      example: "01JABCDEF0123456789XYZ"
+      selector:
+        text:
+
+browse_files:
+  name: Browse files
+  description: Return a file listing from an EasyControlX host.
+  fields:
+    config_entry_id:
+      name: Config entry ID
+      description: Target a specific EasyControlX host when multiple hosts are configured.
+      example: "01JABCDEF0123456789XYZ"
+      selector:
+        text:
+    path:
+      name: Path
+      description: Optional host path to browse. Omit to browse the host default root.
+      example: "C:\\Users"
+      selector:
+        text:
+
+copy_file:
+  name: Copy file
+  description: Copy a file or directory on an EasyControlX host.
+  fields:
+    config_entry_id:
+      name: Config entry ID
+      description: Target a specific EasyControlX host when multiple hosts are configured.
+      example: "01JABCDEF0123456789XYZ"
+      selector:
+        text:
+    source_path:
+      name: Source path
+      description: Existing host path to copy from.
+      required: true
+      example: "C:\\Users\\Public\\report.txt"
+      selector:
+        text:
+    destination_path:
+      name: Destination path
+      description: Target host path to copy to.
+      required: true
+      example: "C:\\Users\\Public\\Archive\\report.txt"
+      selector:
+        text:
+    overwrite:
+      name: Overwrite
+      description: Replace the destination when it already exists.
+      selector:
+        boolean:
+
+refresh:
+  name: Refresh
+  description: Refresh status from an EasyControlX host immediately.
+  fields:
+    config_entry_id:
+      name: Config entry ID
+      description: Target a specific EasyControlX host when multiple hosts are configured.
+      example: "01JABCDEF0123456789XYZ"
+      selector:
+        text:
