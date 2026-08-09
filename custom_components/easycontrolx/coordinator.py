@@ -10,7 +10,13 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .api import EasyControlXApiClient
 from .capabilities import supports_service_inventory
 from .const import UPDATE_INTERVAL_FALLBACK
-from .exceptions import ApiError, CannotConnect, InvalidAuth
+from .exceptions import (
+    ApiError,
+    CannotConnect,
+    InvalidAuth,
+    TLSCertificateUntrusted,
+    TLSFingerprintMismatch,
+)
 from .models import EasyControlXStatus
 
 LOGGER = logging.getLogger(__name__)
@@ -40,6 +46,14 @@ class EasyControlXCoordinator(DataUpdateCoordinator[EasyControlXStatus]):
             status = await self.client.async_get_status()
         except InvalidAuth as err:
             raise ConfigEntryAuthFailed("EasyControlX authentication failed.") from err
+        except TLSFingerprintMismatch as err:
+            raise ConfigEntryAuthFailed(
+                "EasyControlX host certificate changed; verify its fingerprint."
+            ) from err
+        except TLSCertificateUntrusted as err:
+            raise ConfigEntryAuthFailed(
+                "EasyControlX host certificate requires fingerprint approval."
+            ) from err
         except (CannotConnect, ApiError) as err:
             raise UpdateFailed(f"Unable to refresh EasyControlX host status: {err}") from err
 
@@ -52,6 +66,14 @@ class EasyControlXCoordinator(DataUpdateCoordinator[EasyControlXStatus]):
                 status["serviceInventory"] = await self.client.async_get_services()
             except InvalidAuth as err:
                 raise ConfigEntryAuthFailed("EasyControlX authentication failed.") from err
+            except TLSFingerprintMismatch as err:
+                raise ConfigEntryAuthFailed(
+                    "EasyControlX host certificate changed; verify its fingerprint."
+                ) from err
+            except TLSCertificateUntrusted as err:
+                raise ConfigEntryAuthFailed(
+                    "EasyControlX host certificate requires fingerprint approval."
+                ) from err
             except (CannotConnect, ApiError) as err:
                 LOGGER.debug(
                     "Unable to enrich EasyControlX status with service inventory: %s",

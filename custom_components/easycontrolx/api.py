@@ -1,11 +1,29 @@
 from __future__ import annotations
 
 from typing import Any
+from urllib.parse import urlsplit, urlunsplit
 
-from aiohttp import ClientError, ClientResponseError, ClientSession, ClientTimeout
+from aiohttp import (
+    ClientConnectorCertificateError,
+    ClientConnectorSSLError,
+    ClientError,
+    ClientResponseError,
+    ClientSession,
+    ClientTimeout,
+    Fingerprint,
+    ServerFingerprintMismatch,
+)
 
 from .const import DEFAULT_TIMEOUT_SECONDS, TOKEN_HEADER
-from .exceptions import ApiError, CannotConnect, InvalidAuth, PairingExpired, PairingPending
+from .exceptions import (
+    ApiError,
+    CannotConnect,
+    InvalidAuth,
+    PairingExpired,
+    PairingPending,
+    TLSCertificateUntrusted,
+    TLSFingerprintMismatch,
+)
 from .helpers import normalize_optional_string
 
 
@@ -15,11 +33,29 @@ def normalize_base_url(base_url: str) -> str:
     if not normalized:
         msg = "Base URL is required."
         raise ValueError(msg)
+    if any(character.isspace() for character in normalized):
+        msg = "EasyControlX host URL must not contain whitespace."
+        raise ValueError(msg)
 
-    if not normalized.startswith(("http://", "https://")):
-        normalized = f"http://{normalized}"
+    if "://" not in normalized:
+        normalized = f"https://{normalized}"
 
-    return normalized.rstrip("/")
+    try:
+        parsed = urlsplit(normalized)
+        _ = parsed.port
+    except ValueError as err:
+        msg = "EasyControlX host URL is invalid."
+        raise ValueError(msg) from err
+
+    if parsed.scheme.lower() != "https":
+        msg = "EasyControlX Home Assistant connections require HTTPS."
+        raise ValueError(msg)
+    if not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment:
+        msg = "EasyControlX host URL must not contain credentials, a query, or a fragment."
+        raise ValueError(msg)
+
+    base_path = parsed.path.rstrip("/")
+    return urlunsplit(("https", parsed.netloc, base_path, "", ""))
 
 
 class EasyControlXApiClient:
@@ -30,10 +66,12 @@ class EasyControlXApiClient:
         session: ClientSession,
         base_url: str,
         access_token: str | None = None,
+        tls_fingerprint: str | None = None,
     ) -> None:
         self._session = session
         self._base_url = normalize_base_url(base_url)
         self._access_token = access_token.strip() if access_token else None
+        self._ssl = self._build_ssl_fingerprint(tls_fingerprint)
 
     @property
     def base_url(self) -> str:
@@ -254,7 +292,10 @@ class EasyControlXApiClient:
             json_body=json_body,
             auth_required=auth_required,
         )
-        return await response.json()
+        try:
+            return await response.json()
+        except (ClientError, ValueError) as err:
+            raise ApiError("EasyControlX returned an invalid JSON response.") from err
 
     async def _async_request_bytes(
         self,
@@ -297,14 +338,25 @@ class EasyControlXApiClient:
                 json=json_body,
                 params=params,
                 timeout=ClientTimeout(total=DEFAULT_TIMEOUT_SECONDS),
+                ssl=self._ssl,
             )
-        except ClientError as err:
+        except ServerFingerprintMismatch as err:
+            raise TLSFingerprintMismatch(
+                "The EasyControlX host certificate changed. Compare the SHA-256 "
+                "fingerprint currently shown by the host before reconnecting."
+            ) from err
+        except (ClientConnectorCertificateError, ClientConnectorSSLError) as err:
+            raise TLSCertificateUntrusted(
+                "The EasyControlX host certificate is not publicly trusted. Compare and "
+                "approve its SHA-256 fingerprint before reconnecting."
+            ) from err
+        except (ClientError, TimeoutError) as err:
             raise CannotConnect from err
 
         try:
             response.raise_for_status()
         except ClientResponseError as err:
-            if err.status == 401:
+            if err.status in (401, 403):
                 raise InvalidAuth from err
             if err.status == 202 and path == "/api/v1/pair/confirm":
                 raise PairingPending from err
@@ -313,3 +365,25 @@ class EasyControlXApiClient:
             raise ApiError(f"EasyControlX request failed with status {err.status}.") from err
 
         return response
+
+    @staticmethod
+    def _build_ssl_fingerprint(value: str | None) -> Fingerprint | None:
+        """Return aiohttp's strict SHA-256 leaf-certificate verifier."""
+        normalized = normalize_tls_fingerprint(value)
+        return Fingerprint(bytes.fromhex(normalized)) if normalized else None
+
+
+def normalize_tls_fingerprint(value: Any) -> str | None:
+    """Normalize a SHA-256 certificate fingerprint for storage and comparison."""
+    if value is None:
+        return None
+
+    normalized = str(value).replace(":", "").strip().upper()
+    if not normalized:
+        return None
+    if len(normalized) != 64 or any(
+        character not in "0123456789ABCDEF" for character in normalized
+    ):
+        msg = "Host TLS fingerprint must contain 64 hexadecimal characters."
+        raise ValueError(msg)
+    return normalized

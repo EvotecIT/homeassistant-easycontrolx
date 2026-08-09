@@ -38,9 +38,26 @@ Hosts should advertise `_easycontrolx._tcp.local.` and expose TXT keys:
 - `paired`
 - `api`
 - `ws`
+- `baseUrl` when the advertised API endpoint is HTTPS
+- `tlsFingerprint` when the host uses a certificate that clients should pin
 
 The `deviceId` must stay stable and should be used as the Home Assistant unique
-ID.
+ID. Discovery data is unauthenticated and is therefore a hint only: clients must
+not use it to change an existing credential destination or silently approve a
+certificate fingerprint.
+
+## Transport And Trust
+
+- Home Assistant connections use HTTPS.
+- A host may use a publicly trusted or private/self-signed certificate.
+- For a private/self-signed certificate, the user compares and explicitly
+  approves the SHA-256 leaf-certificate fingerprint shown by the host.
+- A changed fingerprint fails closed and enters the repair flow. The replacement
+  pin is stored only after the user compares it with the host again.
+- Controller tokens are sent only in the `X-EasyControlX-Token` header and are
+  validated before the integration stores or replaces them.
+- Pairing completes only after host approval, verification-code comparison, and
+  a successful authenticated request with the issued token.
 
 ## Shared `/api/v1/status` Shape
 
@@ -176,6 +193,9 @@ forms during migration.
 - The integration should create only entities whose required capabilities are
   present.
 - Missing platform-specific capabilities must not be treated as errors.
+- Home Assistant exposes only `Lock` and `Sleep` from the host power surface.
+  `Restart` and `Shutdown` stay host-side because the protocol requires genuine
+  per-action human confirmation.
 - New features should be added as new entities or services, not by changing old
   entity unique IDs.
 - Platform-specific sections in `/status` should be treated as optional.

@@ -37,7 +37,6 @@ from .const import (
     ATTR_WORKING_DIRECTORY,
     AUDIO_ACTIONS,
     CONF_CONFIG_ENTRY_ID,
-    DESTRUCTIVE_POWER_ACTIONS,
     DOMAIN,
     MANAGED_SERVICE_ACTIONS,
     MEDIA_ACTIONS,
@@ -236,7 +235,7 @@ async def _async_handle_power_action(call: ServiceCall) -> dict[str, Any]:
 
     response = await runtime_data.client.async_post_power(
         action,
-        confirmed=action in DESTRUCTIVE_POWER_ACTIONS,
+        confirmed=False,
     )
     await runtime_data.coordinator.async_request_refresh()
     return response

@@ -44,13 +44,41 @@ another option. None of them is required to use this project.
 - A path to grow from host controls into a broader workstation automation stack
 - No direct dependency on DesktopManager or private EasyControlX source code
 
+## Installation
+
+EasyControlX is available as a HACS custom repository:
+
+1. In HACS, open the three-dot menu and choose **Custom repositories**.
+2. Add `https://github.com/EvotecIT/homeassistant-easycontrolx` as an
+   **Integration** repository.
+3. Search for **EasyControlX**, install it, and restart Home Assistant.
+4. Open **Settings → Devices & services → Add integration**, then choose
+   **EasyControlX**.
+
+Use the host's HTTPS URL. If EasyControlX uses a self-signed certificate, copy
+the SHA-256 certificate fingerprint shown by the host and compare it before
+continuing. You may paste an existing controller token or use the guided pairing
+flow. Pairing requires both host approval and entry of the matching verification
+code.
+
+Entries created by version 0.1 are migrated from HTTP to HTTPS. If the host uses
+a self-signed certificate, Home Assistant starts a repair flow so you can compare
+and approve its fingerprint. The host must expose the current HTTPS API before
+upgrading the integration.
+
+Restart and shutdown deliberately remain host-side actions because they require
+a real, per-action human confirmation. Home Assistant exposes Lock and Sleep,
+plus safe capability-gated media, audio, app, process, file, and managed-service
+controls.
+
 ## Current Scope
 
-The first scaffold includes:
+The integration includes:
 
 - UI config flow
 - Zeroconf discovery for `_easycontrolx._tcp.local.`
-- Pairing flow scaffold based on EasyControlX `/pair/start` and `/pair/confirm`
+- Secure HTTPS pairing based on EasyControlX `/pair/start` and `/pair/confirm`
+- Optional SHA-256 certificate pinning with explicit certificate-rotation repair
 - A typed runtime-data setup with `DataUpdateCoordinator`
 - Initial `sensor`, `binary_sensor`, `button`, and `camera` platforms
 - Native `switch` entities for curated managed Windows services
@@ -87,21 +115,14 @@ live in [`docs/ENTITY_MODEL.md`](docs/ENTITY_MODEL.md).
 
 ## Development Checks
 
-Local development and CI now use:
+Local development and CI use:
 
 - `ruff check .`
 - `pytest -q`
 - Home Assistant `hassfest` in GitHub Actions
 
-Install development dependencies with:
+Install all development and Home Assistant test dependencies with:
 
 ```powershell
-python -m pip install -r requirements-dev.txt
-```
-
-If you later add deeper Home Assistant runtime tests that need the HA pytest
-harness, install:
-
-```powershell
-python -m pip install -r requirements-ha-tests.txt
+python -m pip install -r requirements-dev.txt -r requirements-ha-tests.txt
 ```

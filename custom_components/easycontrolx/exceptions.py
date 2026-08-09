@@ -9,6 +9,14 @@ class CannotConnect(EasyControlXError):
     """Raised when the host cannot be reached."""
 
 
+class TLSFingerprintMismatch(CannotConnect):
+    """Raised when the host certificate does not match its approved identity."""
+
+
+class TLSCertificateUntrusted(CannotConnect):
+    """Raised when HTTPS requires explicit certificate fingerprint approval."""
+
+
 class InvalidAuth(EasyControlXError):
     """Raised when the stored token is invalid."""
 
@@ -23,4 +31,3 @@ class PairingPending(EasyControlXError):
 
 class PairingExpired(EasyControlXError):
     """Raised when the pairing session is no longer valid."""
-

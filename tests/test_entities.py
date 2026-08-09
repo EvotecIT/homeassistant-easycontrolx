@@ -64,7 +64,7 @@ def _make_entry() -> SimpleNamespace:
         last_update_success=True,
     )
     return SimpleNamespace(
-        data={"device_id": "host-one", "base_url": "http://host.local:5188"},
+        data={"device_id": "host-one", "base_url": "https://host.local:5188"},
         title="Host One",
         runtime_data=EasyControlXRuntimeData(client=client, coordinator=coordinator),
     )

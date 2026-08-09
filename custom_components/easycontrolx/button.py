@@ -49,24 +49,6 @@ BUTTONS: tuple[EasyControlXButtonDescription, ...] = (
         ),
     ),
     EasyControlXButtonDescription(
-        key="restart",
-        icon="mdi:restart",
-        available_fn=lambda data: "Restart"
-        in (nested_get(data, "power", "supportedActions", default=[]) or []),
-        press_fn=lambda entry: entry.runtime_data.client.async_post_power(
-            "Restart", confirmed=True
-        ),
-    ),
-    EasyControlXButtonDescription(
-        key="shutdown",
-        icon="mdi:power",
-        available_fn=lambda data: "Shutdown"
-        in (nested_get(data, "power", "supportedActions", default=[]) or []),
-        press_fn=lambda entry: entry.runtime_data.client.async_post_power(
-            "Shutdown", confirmed=True
-        ),
-    ),
-    EasyControlXButtonDescription(
         key="play_pause",
         icon="mdi:play-pause",
         available_fn=lambda data: bool(nested_get(data, "media", "isAvailable", default=False)),
@@ -92,7 +74,7 @@ async def async_setup_entry(
     entities: list[EasyControlXButton] = []
 
     for description in BUTTONS:
-        if description.key in {"lock", "sleep", "restart", "shutdown"}:
+        if description.key in {"lock", "sleep"}:
             expected_action = description.key.replace("_", " ").title().replace(" ", "")
             if expected_action not in power_actions:
                 continue
