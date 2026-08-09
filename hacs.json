@@ -2,9 +2,5 @@
   "name": "EasyControlX",
   "content_in_root": false,
   "render_readme": true,
-  "domains": [
-    "easycontrolx"
-  ],
   "homeassistant": "2026.3.0"
 }
-

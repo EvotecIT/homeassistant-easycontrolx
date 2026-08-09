@@ -20,6 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EasyControlXConfigEntry)
     from .const import (
         CONF_BASE_URL,
         CONF_SCAN_INTERVAL,
+        CONF_TLS_FINGERPRINT,
         DATA_LOADED_ENTRY_IDS,
         DOMAIN,
         OPTIONAL_OPTIONS,
@@ -34,6 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EasyControlXConfigEntry)
         session,
         entry.data[CONF_BASE_URL],
         entry.data["access_token"],
+        entry.data.get(CONF_TLS_FINGERPRINT),
     )
 
     interval_seconds = int(
@@ -89,8 +91,25 @@ async def async_migrate_entry(hass: HomeAssistant, entry) -> bool:
     if entry.version > 1:
         return False
 
-    if entry.version == 1 and entry.minor_version == 0:
-        return True
+    if entry.version == 1 and entry.minor_version < 1:
+        from .api import normalize_base_url
+        from .const import CONF_BASE_URL, CONF_TLS_FINGERPRINT
 
-    LOGGER.info("Migrated EasyControlX config entry %s", entry.entry_id)
+        data = dict(entry.data)
+        base_url = str(data.get(CONF_BASE_URL, ""))
+        if base_url.lower().startswith("http://"):
+            base_url = f"https://{base_url[7:]}"
+        try:
+            data[CONF_BASE_URL] = normalize_base_url(base_url)
+        except ValueError:
+            LOGGER.error("Cannot migrate invalid EasyControlX URL for %s", entry.entry_id)
+            return False
+        data.setdefault(CONF_TLS_FINGERPRINT, "")
+        hass.config_entries.async_update_entry(
+            entry,
+            data=data,
+            minor_version=1,
+        )
+        LOGGER.info("Migrated EasyControlX config entry %s to secure transport", entry.entry_id)
+
     return True

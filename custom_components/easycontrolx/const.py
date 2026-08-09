@@ -16,6 +16,7 @@ PLATFORMS: tuple[str, ...] = (
 CONF_BASE_URL = "base_url"
 CONF_CONTROLLER_NAME = "controller_name"
 CONF_DEVICE_ID = "device_id"
+CONF_TLS_FINGERPRINT = "tls_fingerprint"
 CONF_CONFIG_ENTRY_ID = "config_entry_id"
 CONF_PREFERRED_MONITOR_ID = "preferred_monitor_id"
 CONF_SCAN_INTERVAL = "scan_interval"
@@ -57,8 +58,7 @@ ATTR_TARGET = "target"
 ATTR_VALUE = "value"
 ATTR_WORKING_DIRECTORY = "working_directory"
 
-POWER_ACTIONS: tuple[str, ...] = ("Lock", "Sleep", "Restart", "Shutdown")
-DESTRUCTIVE_POWER_ACTIONS: tuple[str, ...] = ("Restart", "Shutdown")
+POWER_ACTIONS: tuple[str, ...] = ("Lock", "Sleep")
 MEDIA_ACTIONS: tuple[str, ...] = ("PlayPause", "NextTrack", "PreviousTrack", "Pause")
 AUDIO_ACTIONS: tuple[str, ...] = (
     "SetOutputVolume",

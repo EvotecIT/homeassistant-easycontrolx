@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
+import voluptuous as vol
 from homeassistant.core import SupportsResponse
 from homeassistant.exceptions import ServiceValidationError
 
@@ -36,6 +37,7 @@ from custom_components.easycontrolx.const import (
 )
 from custom_components.easycontrolx.models import EasyControlXRuntimeData
 from custom_components.easycontrolx.services import (
+    POWER_ACTION_SCHEMA,
     _async_handle_app_launch,
     _async_handle_audio_action,
     _async_handle_browse_files,
@@ -195,6 +197,14 @@ async def test_power_action_targets_only_configured_host() -> None:
     assert response == {"accepted": True, "operationId": "power"}
     client.async_post_power.assert_awaited_once_with("Lock", confirmed=False)
     coordinator.async_request_refresh.assert_awaited_once()
+
+
+def test_power_action_schema_excludes_destructive_host_actions() -> None:
+    with pytest.raises(vol.Invalid):
+        POWER_ACTION_SCHEMA({ATTR_ACTION: "Restart"})
+
+    with pytest.raises(vol.Invalid):
+        POWER_ACTION_SCHEMA({ATTR_ACTION: "Shutdown"})
 
 
 @pytest.mark.asyncio

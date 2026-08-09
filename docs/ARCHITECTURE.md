@@ -29,6 +29,7 @@ Owns:
 Owns:
 
 - Home Assistant config entry lifecycle
+- explicit HTTPS certificate trust and certificate-rotation repair
 - entity mapping
 - polling cadence
 - diagnostics
@@ -41,6 +42,12 @@ Owns:
 - Avoid storing derived runtime state in config entries.
 - Keep entity unique IDs stable even if labels or capabilities expand.
 - Keep discovery optional; manual setup must remain first-class.
+- Treat Zeroconf TXT data only as a connection hint. It must never repoint an
+  existing token or silently approve a certificate fingerprint.
+- Require HTTPS, validate tokens before storage, and preserve certificate pins
+  until the user explicitly verifies a replacement on the host.
+- Keep destructive host power actions behind the host's per-action human
+  confirmation instead of manufacturing confirmation in an automation surface.
 - Use one integration for all EasyControlX hosts and let capabilities decide
   which entities and services exist per host.
 
