@@ -26,6 +26,13 @@
           "tls_fingerprint": "Host certificate SHA-256 fingerprint"
         }
       },
+      "pair_transport_repair": {
+        "title": "Restore secure pairing",
+        "description": "The host certificate changed while pairing was in progress. Compare the SHA-256 fingerprint currently shown by the EasyControlX host, enter it below, and retry. The approved pairing session remains active.",
+        "data": {
+          "tls_fingerprint": "Host certificate SHA-256 fingerprint"
+        }
+      },
       "reauth_confirm": {
         "title": "Reauthenticate EasyControlX",
         "description": "Restore trust in this EasyControlX host. Enter a fresh token, or leave it blank to start host-approved pairing. If the host certificate changed, compare and enter the new SHA-256 fingerprint shown by the host.",

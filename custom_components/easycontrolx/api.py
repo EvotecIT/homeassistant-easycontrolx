@@ -353,15 +353,19 @@ class EasyControlXApiClient:
         except (ClientError, TimeoutError) as err:
             raise CannotConnect from err
 
+        if path == "/api/v1/pair/confirm":
+            if response.status == 202:
+                raise PairingPending
+            if response.status == 410:
+                raise PairingExpired
+            if response.status in (401, 403):
+                raise ApiError("The EasyControlX pairing request was rejected.")
+
         try:
             response.raise_for_status()
         except ClientResponseError as err:
             if err.status in (401, 403):
                 raise InvalidAuth from err
-            if err.status == 202 and path == "/api/v1/pair/confirm":
-                raise PairingPending from err
-            if err.status == 410 and path == "/api/v1/pair/confirm":
-                raise PairingExpired from err
             raise ApiError(f"EasyControlX request failed with status {err.status}.") from err
 
         return response

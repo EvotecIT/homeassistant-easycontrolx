@@ -374,7 +374,9 @@ async def test_invalid_json_maps_to_api_error() -> None:
 @pytest.mark.asyncio
 async def test_pair_confirm_pending_maps_to_pairing_pending() -> None:
     response = Mock()
-    response.raise_for_status.side_effect = _client_response_error(202)
+    response.status = 202
+    response.raise_for_status.return_value = None
+    response.json = AsyncMock(side_effect=AssertionError("202 body must not be parsed"))
 
     session = AsyncMock()
     session.request = AsyncMock(return_value=response)
@@ -383,11 +385,27 @@ async def test_pair_confirm_pending_maps_to_pairing_pending() -> None:
     with pytest.raises(PairingPending):
         await client.async_confirm_pairing("session", "123456")
 
+    response.json.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_pair_confirm_forbidden_maps_to_pairing_error_not_auth_error() -> None:
+    response = Mock()
+    response.status = 403
+    response.raise_for_status.return_value = None
+    session = AsyncMock()
+    session.request = AsyncMock(return_value=response)
+    client = EasyControlXApiClient(session, "https://host.local:5188")
+
+    with pytest.raises(ApiError, match="pairing request was rejected"):
+        await client.async_confirm_pairing("session", "123456")
+
 
 @pytest.mark.asyncio
 async def test_pair_confirm_expired_maps_to_pairing_expired() -> None:
     response = Mock()
-    response.raise_for_status.side_effect = _client_response_error(410)
+    response.status = 410
+    response.raise_for_status.return_value = None
 
     session = AsyncMock()
     session.request = AsyncMock(return_value=response)

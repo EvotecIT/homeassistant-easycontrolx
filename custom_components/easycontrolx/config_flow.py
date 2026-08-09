@@ -137,51 +137,40 @@ class EasyControlXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._pending_pairing is None:
             return self.async_abort(reason="pairing_not_started")
 
-        errors: dict[str, str] = {}
         if user_input is not None:
             entered_code = str(user_input.get("verification_code", "")).strip()
             if entered_code != self._pending_pairing.verification_code:
-                return self.async_show_form(
-                    step_id="pair",
-                    data_schema=self._pairing_schema(),
-                    errors={"base": "code_mismatch"},
-                    description_placeholders=self._pairing_placeholders(),
-                )
+                return self._show_pair(error="code_mismatch")
+            return await self._async_confirm_pending_pairing()
 
-            client = await _async_build_client(
-                self.hass,
-                self._pending_pairing.base_url,
-                tls_fingerprint=self._pending_pairing.tls_fingerprint,
-            )
+        return self._show_pair()
+
+    async def async_step_pair_transport_repair(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Repair certificate trust without discarding an approved pairing session."""
+        if self._pending_pairing is None:
+            return self.async_abort(reason="pairing_not_started")
+        if user_input is not None:
             try:
-                result = await client.async_confirm_pairing(
-                    self._pending_pairing.session_id,
-                    self._pending_pairing.verification_code,
+                raw_fingerprint = user_input.get(
+                    CONF_TLS_FINGERPRINT,
+                    self._pending_pairing.tls_fingerprint,
                 )
-            except PairingPending:
-                errors["base"] = "pairing_pending"
-            except PairingExpired:
-                errors["base"] = "pairing_expired"
-            except TLSFingerprintMismatch:
-                errors["base"] = "fingerprint_mismatch"
-            except TLSCertificateUntrusted:
-                errors["base"] = "fingerprint_required"
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except ApiError:
-                errors["base"] = "pairing_failed"
-            else:
-                access_token = normalize_optional_string(result.get("accessToken"))
-                if access_token:
-                    return await self._async_finish_paired_setup(access_token)
-                errors["base"] = "pairing_pending"
-
-        return self.async_show_form(
-            step_id="pair",
-            data_schema=self._pairing_schema(),
-            errors=errors,
-            description_placeholders=self._pairing_placeholders(),
-        )
+                if (
+                    not str(raw_fingerprint or "").strip()
+                    and self._pending_pairing.tls_fingerprint
+                ):
+                    raw_fingerprint = self._pending_pairing.tls_fingerprint
+                self._pending_pairing.tls_fingerprint = normalize_tls_fingerprint(
+                    raw_fingerprint
+                )
+            except ValueError:
+                return self._show_pair_transport_repair(
+                    fingerprint_error="invalid_fingerprint"
+                )
+            return await self._async_confirm_pending_pairing()
+        return self._show_pair_transport_repair()
 
     async def async_step_pairing_retry(
         self, user_input: dict[str, Any] | None = None
@@ -565,6 +554,53 @@ class EasyControlXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             "verification_code": pending.verification_code,
         }
 
+    async def _async_confirm_pending_pairing(self) -> FlowResult:
+        """Confirm a code already compared by the user and retain repair state."""
+        pending = self._pending_pairing
+        if pending is None:
+            return self.async_abort(reason="pairing_not_started")
+
+        client = await _async_build_client(
+            self.hass,
+            pending.base_url,
+            tls_fingerprint=pending.tls_fingerprint,
+        )
+        try:
+            result = await client.async_confirm_pairing(
+                pending.session_id,
+                pending.verification_code,
+            )
+        except PairingPending:
+            return self._show_pair(error="pairing_pending")
+        except PairingExpired:
+            return self._show_pair(error="pairing_expired")
+        except TLSFingerprintMismatch:
+            return self._show_pair_transport_repair(
+                fingerprint_error="fingerprint_mismatch"
+            )
+        except TLSCertificateUntrusted:
+            return self._show_pair_transport_repair(
+                fingerprint_error="fingerprint_required"
+            )
+        except CannotConnect:
+            return self._show_pair(error="cannot_connect")
+        except (InvalidAuth, ApiError):
+            return self._show_pair(error="pairing_failed")
+
+        access_token = normalize_optional_string(result.get("accessToken"))
+        if access_token:
+            return await self._async_finish_paired_setup(access_token)
+        return self._show_pair(error="pairing_pending")
+
+    def _show_pair(self, error: str | None = None) -> FlowResult:
+        """Show the pairing-code confirmation form."""
+        return self.async_show_form(
+            step_id="pair",
+            data_schema=self._pairing_schema(),
+            errors={"base": error} if error else {},
+            description_placeholders=self._pairing_placeholders(),
+        )
+
     async def _async_finish_paired_setup(self, access_token: str) -> FlowResult:
         """Validate the issued token before persisting the paired entry."""
         pending = self._pending_pairing
@@ -624,6 +660,31 @@ class EasyControlXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {CONF_TLS_FINGERPRINT: fingerprint_error}
                 if fingerprint_error
                 else {"base": error} if error else {}
+            ),
+        )
+
+    def _show_pair_transport_repair(
+        self,
+        fingerprint_error: str | None = None,
+    ) -> FlowResult:
+        """Show certificate repair while preserving the pending pairing session."""
+        fingerprint = (
+            self._pending_pairing.tls_fingerprint if self._pending_pairing else ""
+        ) or ""
+        return self.async_show_form(
+            step_id="pair_transport_repair",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_TLS_FINGERPRINT,
+                        default=fingerprint,
+                    ): str,
+                }
+            ),
+            errors=(
+                {CONF_TLS_FINGERPRINT: fingerprint_error}
+                if fingerprint_error
+                else {}
             ),
         )
 

@@ -25,7 +25,7 @@ from custom_components.easycontrolx.const import (
     CONF_TLS_FINGERPRINT,
     DOMAIN,
 )
-from custom_components.easycontrolx.exceptions import CannotConnect
+from custom_components.easycontrolx.exceptions import CannotConnect, TLSFingerprintMismatch
 
 BASE_URL = "https://studio-pc.example.test:7443"
 DEVICE_URL = f"{BASE_URL}/api/v1/device"
@@ -258,6 +258,52 @@ async def test_pairing_retry_preserves_token_and_accepts_verified_fingerprint(
     assert result["data"][CONF_ACCESS_TOKEN] == "paired-token"
     assert result["data"][CONF_TLS_FINGERPRINT] == "A1" * 32
     client.async_confirm_pairing.assert_awaited_once_with("session-1", "741258")
+
+
+async def test_pairing_certificate_repair_preserves_approved_session(
+    hass: HomeAssistant,
+) -> None:
+    client = AsyncMock()
+    client.async_get_device.return_value = DEVICE
+    client.async_start_pairing.return_value = {
+        "sessionId": "session-1",
+        "verificationCode": "741258",
+    }
+    client.async_confirm_pairing.side_effect = [
+        TLSFingerprintMismatch("certificate changed"),
+        {"accessToken": "paired-token"},
+    ]
+    client.async_get_status.return_value = {"device": DEVICE}
+
+    with patch(
+        "custom_components.easycontrolx.config_flow._async_build_client",
+        AsyncMock(return_value=client),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={
+                CONF_BASE_URL: BASE_URL,
+                CONF_ACCESS_TOKEN: "",
+                CONF_TLS_FINGERPRINT: "A1" * 32,
+                CONF_CONTROLLER_NAME: "Home Assistant",
+            },
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"verification_code": "741258"}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "pair_transport_repair"
+        assert result["errors"] == {CONF_TLS_FINGERPRINT: "fingerprint_mismatch"}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_TLS_FINGERPRINT: "B2" * 32}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_ACCESS_TOKEN] == "paired-token"
+    assert result["data"][CONF_TLS_FINGERPRINT] == "B2" * 32
+    assert client.async_confirm_pairing.await_count == 2
 
 
 async def test_reauth_replaces_token_without_downgrading_certificate_trust(
