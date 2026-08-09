@@ -15,6 +15,9 @@ jobs:
         uses: hacs/action@main
         with:
           category: integration
+          # HACS queries the default branch for repository licensing. This PR
+          # bootstraps the LICENSE file, so that API check cannot pass pre-merge.
+          ignore: license
 
   hassfest:
     name: Hassfest
