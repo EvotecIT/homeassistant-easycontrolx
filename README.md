@@ -1,121 +1,101 @@
 # EasyControlX for Home Assistant
 
-![EasyControlX for Home Assistant — illustrative artwork](assets/homeassistant-easycontrolx-social.png)
+![EasyControlX for Home Assistant](assets/homeassistant-easycontrolx-social.png)
 
-*Illustrative artwork. Available controls depend on the device and integration support.*
+[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://hacs.xyz/)
+[![CI](https://img.shields.io/github/actions/workflow/status/EvotecIT/homeassistant-easycontrolx/ci.yml?branch=main&style=for-the-badge&label=CI)](https://github.com/EvotecIT/homeassistant-easycontrolx/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/EvotecIT/homeassistant-easycontrolx?style=for-the-badge)](LICENSE)
 
-`homeassistant-easycontrolx` is a public Home Assistant custom integration for
-EasyControlX hosts.
+## Overview
 
-The goal is simple: make EasyControlX the long-term replacement for brittle
-Windows desktop helper stacks such as Hass.Agent-style setups, while keeping the
-Home Assistant side clean, public, and easy to install.
+Connect an EasyControlX host to Home Assistant over HTTPS. Use host status,
+desktop previews, and the controls that the host makes available from the same
+Home Assistant setup.
+
+- Host, session, audio, media, and system-status entities.
+- Lock, Sleep, playback, and mute buttons where supported.
+- Desktop and active-window preview cameras.
+- Capability-gated app, process, file, and managed-service actions.
+
+You need a running EasyControlX host; this repository installs only the Home
+Assistant integration. Windows and macOS capabilities can differ. Restart and
+shutdown remain host-side actions with per-action human confirmation.
+
+## Sponsor
+
+Support development and maintenance through
+[GitHub Sponsors](https://github.com/sponsors/PrzemyslawKlys).
+Sponsorship is optional; these projects remain open source.
 
 ## More for your Home Assistant home
 
-Other projects we maintain for the same setup:
+Other integrations and dashboards we maintain:
 
-- [Dreame & MOVA mowers](https://github.com/EvotecIT/homeassistant-dreamelawnmower) — mowing controls, maps, schedules, and supported cameras.
-- [Lawn Mower Card](https://github.com/EvotecIT/lovelace-lawn-mower-card) — a visual dashboard for mower state, maps, and controls.
-- [KEF](https://github.com/EvotecIT/homeassistant-kef) — local control for modern and legacy speaker families.
-- [Devialet](https://github.com/EvotecIT/homeassistant-devialet) — local speaker control, with Dione support.
-- [Siegenia](https://github.com/EvotecIT/homeassistant-siegenia) — local control for supported window controllers.
+- [Dreame & MOVA mowers](https://github.com/EvotecIT/homeassistant-dreamelawnmower) — Mowing controls, maps, schedules, and supported cameras.
+- [Lawn Mower Card](https://github.com/EvotecIT/lovelace-lawn-mower-card) — A dashboard for mower state, maps, and controls.
+- [KEF](https://github.com/EvotecIT/homeassistant-kef) — Local control for modern and legacy speaker families.
+- [Devialet](https://github.com/EvotecIT/homeassistant-devialet) — Local speaker control, with Dione support.
+- [Siegenia](https://github.com/EvotecIT/homeassistant-siegenia) — Local control for supported window controllers.
 
-Prefer a native app for everyday control? [CasaRay](https://casaray.dev/)
-brings rooms, devices, cameras, and home activity together on iPhone, iPad, and
-Mac. [Tactra Remote](https://tactra.dev/) puts media players, speakers, and TV
-controls in a focused remote for iPhone, iPad, Apple Watch, and Mac.
+For a native app connected to the same Home Assistant setup:
 
-Both connect to your Home Assistant setup. Neither is required to use this
-project.
+- [CasaRay](https://casaray.dev/) — rooms, devices, cameras, and home activity on
+  iPhone, iPad, and Mac.
+- [Tactra Remote](https://tactra.dev/) — media players, speakers, and TV controls
+  on iPhone, iPad, Apple Watch, and Mac.
 
-## Design Goals
-
-- Native Home Assistant integration, not pasted YAML as the primary UX
-- Public custom integration repo with a stable API boundary to EasyControlX
-- Future-friendly config entries, diagnostics, reauth, and reconfigure flows
-- A path to grow from host controls into a broader workstation automation stack
-- No direct dependency on DesktopManager or private EasyControlX source code
+Neither app is required to use this project.
 
 ## Installation
 
-EasyControlX is available as a HACS custom repository:
+### HACS
 
-1. In HACS, open the three-dot menu and choose **Custom repositories**.
-2. Add `https://github.com/EvotecIT/homeassistant-easycontrolx` as an
-   **Integration** repository.
-3. Search for **EasyControlX**, install it, and restart Home Assistant.
-4. Open **Settings → Devices & services → Add integration**, then choose
+[![Open this repository in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=EvotecIT&repository=homeassistant-easycontrolx&category=integration)
+
+1. Open the repository with the button above. Alternatively, in HACS choose
+   **Custom repositories**, add `https://github.com/EvotecIT/homeassistant-easycontrolx`,
+   and select **Integration**.
+2. Download **EasyControlX** and restart Home Assistant.
+3. Open **Settings → Devices & services → Add integration**, then choose
    **EasyControlX**.
 
-Use the host's HTTPS URL. If EasyControlX uses a self-signed certificate, copy
-the SHA-256 certificate fingerprint shown by the host and compare it before
-continuing. You may paste an existing controller token or use the guided pairing
-flow. Pairing requires both host approval and entry of the matching verification
-code.
+### Manual
 
-Entries created by version 0.1 are migrated from HTTP to HTTPS. If the host uses
-a self-signed certificate, Home Assistant starts a repair flow so you can compare
-and approve its fingerprint. The host must expose the current HTTPS API before
-upgrading the integration.
+1. Download the repository and copy `custom_components/easycontrolx` into your
+   Home Assistant `config/custom_components` directory.
+2. Restart Home Assistant.
+3. Add **EasyControlX** from **Settings → Devices & services**.
 
-Restart and shutdown deliberately remain host-side actions because they require
-a real, per-action human confirmation. Home Assistant exposes Lock and Sleep,
-plus safe capability-gated media, audio, app, process, file, and managed-service
-controls.
+## Configuration
 
-## Current Scope
+1. Enter the EasyControlX host's **HTTPS URL**.
+2. For a self-signed certificate, compare and enter the SHA-256 fingerprint
+   shown by the host.
+3. Paste an existing controller token, or leave it blank to start pairing.
+4. For pairing, approve the request on the host and enter the matching
+   verification code in Home Assistant.
 
-The integration includes:
+Use **Configure** to adjust polling and the preferred preview monitor. If the
+host address or certificate changes, use the reconfigure or repair flow and
+verify the new fingerprint on the host itself.
 
-- UI config flow
-- Zeroconf discovery for `_easycontrolx._tcp.local.`
-- Secure HTTPS pairing based on EasyControlX `/pair/start` and `/pair/confirm`
-- Optional SHA-256 certificate pinning with explicit certificate-rotation repair
-- A typed runtime-data setup with `DataUpdateCoordinator`
-- Initial `sensor`, `binary_sensor`, `button`, and `camera` platforms
-- Native `switch` entities for curated managed Windows services
-- Per-service restart buttons for curated managed Windows services
-- Per-service running-state binary sensors for inventory-only managed-service hosts
-- Native Home Assistant services for power, media, audio, refresh, app launch,
-  process actions, managed service actions, and file workflows
-- Diagnostics with token redaction
-- Options flow for polling interval and preferred preview monitor
+Upgrading from integration version 0.1 requires the host's HTTPS API. Existing
+HTTP entries migrate to HTTPS, and self-signed hosts require fingerprint
+approval. See [configuration and migration](docs/configuration.md).
 
-## Future-Friendly Rules
+## Documentation
 
-- Keep the integration bound to the documented EasyControlX HTTP contract only
-- Store setup-critical data in config-entry data and optional tuning in options
-- Use the EasyControlX `deviceId` as the Home Assistant unique ID
-- Add new features as new entity platforms or services without breaking existing entity IDs
-- Keep runtime state in `ConfigEntry.runtime_data`
-- Treat diagnostics, reauth, and reconfigure as first-class features, not cleanup work
-- Keep entity creation capability-driven so Windows and macOS share one
-  integration cleanly
+| I want to… | Guide |
+| --- | --- |
+| Pair a host, change connection settings, or migrate from HTTP | [Configuration](docs/configuration.md) |
+| Use buttons and services in automations | [Automations](docs/automations.md) |
+| Understand which entities my host provides | [Entity model](docs/ENTITY_MODEL.md) |
+| Contribute or implement a compatible host | [Development](docs/development.md) · [Host contract](docs/CONTRACT.md) |
+| Understand the integration boundary or planned work | [Architecture](docs/ARCHITECTURE.md) · [Roadmap](docs/ROADMAP.md) |
 
-## Replacement Strategy
+## Support
 
-This repo is meant to grow into a serious workstation integration, not just a
-few power buttons. The roadmap in [`docs/ROADMAP.md`](docs/ROADMAP.md) is aimed
-at replacing the common "Windows agent plus fragile custom scripts" pattern with
-a more coherent host-control stack.
-
-The shared host contract and capability namespace plan live in
-[`docs/CONTRACT.md`](docs/CONTRACT.md).
-
-The Home Assistant entity creation rules and capability-gated mapping model
-live in [`docs/ENTITY_MODEL.md`](docs/ENTITY_MODEL.md).
-
-## Development Checks
-
-Local development and CI use:
-
-- `ruff check .`
-- `pytest -q`
-- Home Assistant `hassfest` in GitHub Actions
-
-Install all development and Home Assistant test dependencies with:
-
-```powershell
-python -m pip install -r requirements-dev.txt -r requirements-ha-tests.txt
-```
+[Report an issue](https://github.com/EvotecIT/homeassistant-easycontrolx/issues)
+with the host platform and version, integration version, and the failed action.
+Include diagnostics only after reviewing them. Never post controller tokens,
+pairing codes, or screenshots containing private desktop content.
