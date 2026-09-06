@@ -8,9 +8,6 @@ This repository is intentionally separate from the main EasyControlX codebase.
 - `homeassistant-easycontrolx` remains the public Home Assistant integration.
 - The integration depends only on the documented EasyControlX API contract.
 
-That split gives us cleaner licensing, easier public releases, and a safer
-upgrade story.
-
 ## Layering
 
 ### EasyControlX host
@@ -34,7 +31,7 @@ Owns:
 - polling cadence
 - diagnostics
 - reauth/reconfigure flows
-- future HA-specific services and automations
+- Home Assistant-specific services and automation examples
 
 ## Compatibility Philosophy
 

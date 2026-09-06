@@ -199,13 +199,15 @@ forms during migration.
 - New features should be added as new entities or services, not by changing old
   entity unique IDs.
 - Platform-specific sections in `/status` should be treated as optional.
-- Telemetry should start as stable host-level sensors. Per-volume,
-  per-interface, or per-service entities should be added later.
+- Telemetry uses stable host-level sensors. Curated managed services also have
+  per-service entities, with inventory and control gated separately; see the
+  [entity model](ENTITY_MODEL.md). Per-volume and per-interface entities remain
+  future candidates.
 
 ## Telemetry Extensions
 
-To support workstation observability cleanly, the shared status payload should
-grow with these optional sections:
+The integration consumes these optional workstation telemetry sections when
+the host supplies them:
 
 ```json
 {
