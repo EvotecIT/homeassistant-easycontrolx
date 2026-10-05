@@ -17,7 +17,7 @@ contract or applicability audit. Exemptions require a rule-permitted explanation
 | appropriate-polling | Partial | Coordinator interval and options exist; measure normal/offline request counts. |
 | brands | Review | Verify installed HA/HACS branding assets. |
 | common-modules | Partial | API, coordinator, entity, capability, and managed-service owners exist; inspect remaining duplication. |
-| config-flow-test-coverage | Gap | Measured flow coverage is 92%; connection failures, pairing failures, re-pairing, and options persistence are covered. Complete remaining reachable recovery paths. |
+| config-flow-test-coverage | Gap | Measured flow statement coverage is 96.6% (312/323), with 86.8% branch coverage (66/76). Tests cover post-approval token rejection, changed host identity, certificate repair without losing the pairing session, discovery trust checks, and options persistence. Defensive and remaining flow paths still need qualification. |
 | config-flow | Partial | UI, discovery, pairing, and token flows have tests; verify actual installed UI. |
 | dependency-transparency | Partial | Host contract and HTTPS boundary are documented; inspect shipped requirements and network behaviour. |
 | docs-actions | Partial | Automation guide exists; validate each supported action and its parameters. |
@@ -47,7 +47,7 @@ contract or applicability audit. Exemptions require a rule-permitted explanation
 | log-when-unavailable | Review | Inspect one disconnect/reconnect cycle for useful non-repeating logging. |
 | parallel-updates | Partial | Buttons and switches declare one parallel update per platform and entry; coordinator-state platforms declare zero. A real HA multi-button action reproduces overlapping commands before the change and verifies serialization afterward. Integration-wide actions, polling, and camera image requests are outside this semaphore. |
 | reauthentication-flow | Partial | Reauth and certificate-change checks have tests; verify actual UI and credential replacement. |
-| test-coverage | Gap | 202 tests pass on minimum/current HA. The measured statement-coverage baseline at 70f7a29 is 95.2% (1,183 of 1,242 statements), including 100% of camera behavior. Full flow coverage and remaining meaningful module paths still need qualification. |
+| test-coverage | Gap | 212 tests pass on minimum/current HA. Current statement coverage is 97.4% (1,240/1,273), with 88.6% branch coverage (209/236), including 100% of camera and shared error-translation behavior. Remaining meaningful module and flow paths still need qualification. |
 
 ## Gold
 

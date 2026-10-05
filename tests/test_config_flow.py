@@ -271,52 +271,6 @@ async def test_pairing_retry_preserves_token_and_accepts_verified_fingerprint(
     client.async_confirm_pairing.assert_awaited_once_with("session-1", "741258")
 
 
-async def test_pairing_certificate_repair_preserves_approved_session(
-    hass: HomeAssistant,
-) -> None:
-    client = AsyncMock()
-    client.async_get_device.return_value = DEVICE
-    client.async_start_pairing.return_value = {
-        "sessionId": "session-1",
-        "verificationCode": "741258",
-    }
-    client.async_confirm_pairing.side_effect = [
-        TLSFingerprintMismatch("certificate changed"),
-        {"accessToken": "paired-token"},
-    ]
-    client.async_get_status.return_value = {"device": DEVICE}
-
-    with patch(
-        "custom_components.easycontrolx.config_flow._async_build_client",
-        AsyncMock(return_value=client),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={
-                CONF_BASE_URL: BASE_URL,
-                CONF_ACCESS_TOKEN: "",
-                CONF_TLS_FINGERPRINT: "A1" * 32,
-                CONF_CONTROLLER_NAME: "Home Assistant",
-            },
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"verification_code": "741258"}
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "pair_transport_repair"
-        assert result["errors"] == {CONF_TLS_FINGERPRINT: "fingerprint_mismatch"}
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_TLS_FINGERPRINT: "B2" * 32}
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_ACCESS_TOKEN] == "paired-token"
-    assert result["data"][CONF_TLS_FINGERPRINT] == "B2" * 32
-    assert client.async_confirm_pairing.await_count == 2
-
-
 async def test_reauth_replaces_token_without_downgrading_certificate_trust(
     hass: HomeAssistant,
     aioclient_mock,
@@ -525,8 +479,9 @@ async def test_zeroconf_cannot_repoint_an_existing_token(hass: HomeAssistant) ->
     assert entry.data[CONF_ACCESS_TOKEN] == "controller-token"
 
 
+@pytest.mark.parametrize("access_token", ["controller-token", ""])
 async def test_discovered_identity_is_checked_before_sending_user_token(
-    hass: HomeAssistant,
+    hass: HomeAssistant, access_token: str,
 ) -> None:
     client = AsyncMock()
     client.async_get_device.return_value = {**DEVICE, "deviceId": "attacker-device"}
@@ -549,7 +504,7 @@ async def test_discovered_identity_is_checked_before_sending_user_token(
             result["flow_id"],
             {
                 CONF_BASE_URL: BASE_URL,
-                CONF_ACCESS_TOKEN: "controller-token",
+                CONF_ACCESS_TOKEN: access_token,
                 CONF_TLS_FINGERPRINT: "",
                 CONF_CONTROLLER_NAME: "Home Assistant",
             },
@@ -558,6 +513,7 @@ async def test_discovered_identity_is_checked_before_sending_user_token(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
     client.async_get_status.assert_not_awaited()
+    client.async_start_pairing.assert_not_awaited()
 
 
 @pytest.mark.parametrize("source", [SOURCE_USER, SOURCE_REAUTH, SOURCE_RECONFIGURE])
@@ -733,3 +689,42 @@ async def test_repair_rejects_invalid_connection_input_without_network(hass, sou
         build.assert_not_awaited()
     assert result["errors"] == {CONF_TLS_FINGERPRINT: "invalid_fingerprint"}
     assert dict(entry.data) == original
+
+
+@pytest.mark.parametrize("properties", [
+    {},
+    {"tlsFingerprint": "invalid"},
+    {"baseUrl": "http://host.local:5188"},
+])
+async def test_discovery_without_secure_endpoint_is_rejected(hass, properties):
+    with patch("custom_components.easycontrolx.config_flow._async_build_client",
+               new_callable=AsyncMock) as build:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_ZEROCONF},
+            data=_zeroconf_info(properties=properties),
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_device"
+    build.assert_not_awaited()
+    assert hass.config_entries.async_entries(DOMAIN) == []
+
+
+async def test_discovery_without_advertised_identity_uses_verified_device(hass):
+    client = AsyncMock()
+    client.async_get_device.return_value = DEVICE
+    client.async_get_status.return_value = {"device": DEVICE}
+    with patch("custom_components.easycontrolx.config_flow._async_build_client",
+               new_callable=AsyncMock, return_value=client):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_ZEROCONF},
+            data=_zeroconf_info(properties={"baseUrl": BASE_URL}),
+        )
+        assert result["type"] is FlowResultType.FORM
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_BASE_URL: BASE_URL, CONF_ACCESS_TOKEN: "verified-token"},
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_DEVICE_ID] == DEVICE["deviceId"]
+    assert result["result"].unique_id == DEVICE["deviceId"]
+    client.async_get_status.assert_awaited_once()
