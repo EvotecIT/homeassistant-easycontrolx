@@ -17,7 +17,7 @@ contract or applicability audit. Exemptions require a rule-permitted explanation
 | appropriate-polling | Partial | Coordinator interval and options exist; measure normal/offline request counts. |
 | brands | Review | Verify installed HA/HACS branding assets. |
 | common-modules | Partial | API, coordinator, entity, capability, and managed-service owners exist; inspect remaining duplication. |
-| config-flow-test-coverage | Gap | Measured flow coverage is 77%; cover remaining meaningful setup/repair/options outcomes. |
+| config-flow-test-coverage | Gap | Measured flow coverage is 92%; connection failures, pairing failures, re-pairing, and options persistence are covered. Complete remaining reachable recovery paths. |
 | config-flow | Partial | UI, discovery, pairing, and token flows have tests; verify actual installed UI. |
 | dependency-transparency | Partial | Host contract and HTTPS boundary are documented; inspect shipped requirements and network behaviour. |
 | docs-actions | Partial | Automation guide exists; validate each supported action and its parameters. |
@@ -47,7 +47,7 @@ contract or applicability audit. Exemptions require a rule-permitted explanation
 | log-when-unavailable | Review | Inspect one disconnect/reconnect cycle for useful non-repeating logging. |
 | parallel-updates | Review | Choose and verify explicit platform concurrency against the host's supported request model. |
 | reauthentication-flow | Partial | Reauth and certificate-change checks have tests; verify actual UI and credential replacement. |
-| test-coverage | Gap | Current overall coverage is 91%; camera request/capability behavior reaches 100% with real HA classes. Complete remaining meaningful module and flow coverage. |
+| test-coverage | Gap | Current overall statement coverage is 95.2% (1,180 of 1,239 statements), including 100% of camera behavior. Full flow coverage and remaining meaningful module paths still need qualification. |
 
 ## Gold
 
