@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine
 from typing import Any, cast
 
 import voluptuous as vol
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -207,25 +207,6 @@ async def async_register_services(hass: HomeAssistant) -> None:
         REFRESH_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
     )
-
-
-def async_unregister_services(hass: HomeAssistant) -> None:
-    """Remove EasyControlX domain services."""
-    for service in (
-        SERVICE_POWER_ACTION,
-        SERVICE_MEDIA_ACTION,
-        SERVICE_AUDIO_ACTION,
-        SERVICE_APP_LAUNCH,
-        SERVICE_PROCESS_ACTION,
-        SERVICE_SERVICE_ACTION,
-        SERVICE_LIST_PROCESSES,
-        SERVICE_LIST_SERVICES,
-        SERVICE_BROWSE_FILES,
-        SERVICE_COPY_FILE,
-        SERVICE_REFRESH,
-    ):
-        if hass.services.has_service(DOMAIN, service):
-            hass.services.async_remove(DOMAIN, service)
 
 
 async def _async_handle_power_action(call: ServiceCall) -> dict[str, Any]:
@@ -490,7 +471,7 @@ def _resolve_runtime_data(
         )
 
     runtime_data = getattr(entry, "runtime_data", None)
-    if runtime_data is None:
+    if entry.state is not ConfigEntryState.LOADED or runtime_data is None:
         raise ServiceValidationError(
             f"EasyControlX host '{entry.title or entry.entry_id}' is not currently loaded."
         )

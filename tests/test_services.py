@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 import voluptuous as vol
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import SupportsResponse
 from homeassistant.exceptions import ServiceValidationError
 
@@ -51,7 +52,6 @@ from custom_components.easycontrolx.services import (
     _async_handle_service_action,
     _resolve_runtime_data,
     async_register_services,
-    async_unregister_services,
 )
 
 DEFAULT_STATUS = {
@@ -142,6 +142,7 @@ def _make_entry(
     )
     entry = SimpleNamespace(
         entry_id=f"{device_id}-entry",
+        state=ConfigEntryState.LOADED,
         title=device_id,
         runtime_data=EasyControlXRuntimeData(client=client, coordinator=coordinator),
     )
@@ -153,7 +154,7 @@ def _make_call(hass: SimpleNamespace, data: dict[str, object]) -> SimpleNamespac
 
 
 @pytest.mark.asyncio
-async def test_register_and_unregister_services() -> None:
+async def test_register_services() -> None:
     hass = _make_hass()
 
     await async_register_services(hass)
@@ -171,21 +172,6 @@ async def test_register_and_unregister_services() -> None:
     assert hass.services.has_service(DOMAIN, SERVICE_REFRESH)
     assert hass.services._handlers[(DOMAIN, SERVICE_LIST_PROCESSES)][2] == SupportsResponse.ONLY
     assert hass.services._handlers[(DOMAIN, SERVICE_POWER_ACTION)][2] == SupportsResponse.OPTIONAL
-
-    async_unregister_services(hass)
-
-    assert not hass.services.has_service(DOMAIN, SERVICE_POWER_ACTION)
-    assert not hass.services.has_service(DOMAIN, SERVICE_MEDIA_ACTION)
-    assert not hass.services.has_service(DOMAIN, SERVICE_AUDIO_ACTION)
-    assert not hass.services.has_service(DOMAIN, SERVICE_APP_LAUNCH)
-    assert not hass.services.has_service(DOMAIN, SERVICE_PROCESS_ACTION)
-    assert not hass.services.has_service(DOMAIN, SERVICE_SERVICE_ACTION)
-    assert not hass.services.has_service(DOMAIN, SERVICE_LIST_PROCESSES)
-    assert not hass.services.has_service(DOMAIN, SERVICE_LIST_SERVICES)
-    assert not hass.services.has_service(DOMAIN, SERVICE_BROWSE_FILES)
-    assert not hass.services.has_service(DOMAIN, SERVICE_COPY_FILE)
-    assert not hass.services.has_service(DOMAIN, SERVICE_REFRESH)
-
 
 @pytest.mark.asyncio
 async def test_power_action_targets_only_configured_host() -> None:
@@ -453,7 +439,10 @@ def test_resolve_runtime_data_requires_known_entry_id() -> None:
 
 
 def test_resolve_runtime_data_requires_loaded_runtime_data() -> None:
-    entry = SimpleNamespace(entry_id="host-one-entry", title="host-one", runtime_data=None)
+    entry = SimpleNamespace(
+        entry_id="host-one-entry", title="host-one",
+        state=ConfigEntryState.NOT_LOADED, runtime_data=None,
+    )
     hass = _make_hass([entry])
 
     with pytest.raises(ServiceValidationError, match="not currently loaded"):

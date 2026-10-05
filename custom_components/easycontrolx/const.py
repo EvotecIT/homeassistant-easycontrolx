@@ -3,7 +3,6 @@ from __future__ import annotations
 from datetime import timedelta
 
 DOMAIN = "easycontrolx"
-DATA_LOADED_ENTRY_IDS = "loaded_entry_ids"
 
 PLATFORMS: tuple[str, ...] = (
     "binary_sensor",

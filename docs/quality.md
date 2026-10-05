@@ -13,7 +13,7 @@ contract or applicability audit. Exemptions require a rule-permitted explanation
 
 | Rule | State | Evidence or next acceptance step |
 | --- | --- | --- |
-| action-setup | Gap | Move action registration from entry setup into integration setup and cover unavailable entries. |
+| action-setup | Implemented | Actions register in integration setup and remain available after unload. Real HA lifecycle tests verify calls before configuration, while loaded, and after unload; unloaded entries reject retained runtime data. |
 | appropriate-polling | Partial | Coordinator interval and options exist; measure normal/offline request counts. |
 | brands | Review | Verify installed HA/HACS branding assets. |
 | common-modules | Partial | API, coordinator, entity, capability, and managed-service owners exist; inspect remaining duplication. |
