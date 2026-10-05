@@ -67,3 +67,9 @@ existing entity IDs.
 The [architecture](ARCHITECTURE.md), [host contract](CONTRACT.md), and
 [entity model](ENTITY_MODEL.md) are the sources for those boundaries. Planned
 work belongs in the [roadmap](ROADMAP.md), not in the README's feature list.
+
+Camera tests import HA's real camera platform. CI installs its declared
+PyTurboJPEG requirement for each HA version (1.8.0 on 2026.3.0, 1.8.3 on
+2026.9.4); this dependency belongs only to the test environment. Tests cover
+capability-based setup, privacy defaults, selected-monitor requests, preview
+sizes, and active-window changes without capturing a real desktop.

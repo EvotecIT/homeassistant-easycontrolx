@@ -47,7 +47,7 @@ contract or applicability audit. Exemptions require a rule-permitted explanation
 | log-when-unavailable | Review | Inspect one disconnect/reconnect cycle for useful non-repeating logging. |
 | parallel-updates | Review | Choose and verify explicit platform concurrency against the host's supported request model. |
 | reauthentication-flow | Partial | Reauth and certificate-change checks have tests; verify actual UI and credential replacement. |
-| test-coverage | Gap | Baseline overall coverage is 85%, with camera at 4%; complete meaningful module coverage. |
+| test-coverage | Gap | Current overall coverage is 91%; camera request/capability behavior reaches 100% with real HA classes. Complete remaining meaningful module and flow coverage. |
 
 ## Gold
 
