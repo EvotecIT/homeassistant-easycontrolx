@@ -15,6 +15,8 @@ from .capabilities import (
 from .managed_services import EasyControlXManagedServiceEntity
 from .models import EasyControlXConfigEntry
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

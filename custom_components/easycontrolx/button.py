@@ -22,6 +22,8 @@ from .helpers import nested_get
 from .managed_services import EasyControlXManagedServiceEntity
 from .models import EasyControlXConfigEntry
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class EasyControlXButtonDescription(ButtonEntityDescription):

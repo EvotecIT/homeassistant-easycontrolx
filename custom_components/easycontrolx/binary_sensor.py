@@ -23,6 +23,8 @@ from .helpers import nested_get
 from .managed_services import EasyControlXManagedServiceEntity
 from .models import EasyControlXConfigEntry
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class EasyControlXBinarySensorDescription(BinarySensorEntityDescription):

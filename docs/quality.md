@@ -45,9 +45,9 @@ contract or applicability audit. Exemptions require a rule-permitted explanation
 | entity-unavailable | Partial | Coordinator and capability availability exist; exercise host, service, and active-window loss/recovery. |
 | integration-owner | Partial | Maintainers and issue tracker are declared; verify support and security-reporting paths. |
 | log-when-unavailable | Review | Inspect one disconnect/reconnect cycle for useful non-repeating logging. |
-| parallel-updates | Review | Choose and verify explicit platform concurrency against the host's supported request model. |
+| parallel-updates | Partial | Buttons and switches declare one parallel update per platform and entry; coordinator-state platforms declare zero. A real HA multi-button action reproduces overlapping commands before the change and verifies serialization afterward. Integration-wide actions, polling, and camera image requests are outside this semaphore. |
 | reauthentication-flow | Partial | Reauth and certificate-change checks have tests; verify actual UI and credential replacement. |
-| test-coverage | Gap | 161 tests pass on minimum/current HA. Current overall statement coverage is 95.2% (1,183 of 1,242 statements), including 100% of camera behavior. Full flow coverage and remaining meaningful module paths still need qualification. |
+| test-coverage | Gap | 162 tests pass on minimum/current HA. The measured statement-coverage baseline at 70f7a29 is 95.2% (1,183 of 1,242 statements), including 100% of camera behavior. Full flow coverage and remaining meaningful module paths still need qualification. |
 
 ## Gold
 

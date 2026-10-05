@@ -73,3 +73,15 @@ PyTurboJPEG requirement for each HA version (1.8.0 on 2026.3.0, 1.8.3 on
 2026.9.4); this dependency belongs only to the test environment. Tests cover
 capability-based setup, privacy defaults, selected-monitor requests, preview
 sizes, and active-window changes without capturing a real desktop.
+
+
+## Platform concurrency
+
+Buttons and switches declare `PARALLEL_UPDATES = 1`, so Home Assistant serializes
+entity actions within each platform and config entry. A real HA multi-button
+action verifies one active host command at a time. Sensors, binary sensors, and
+cameras declare zero because coordinator updates supply their entity state.
+
+This is not a global client lock. Different platforms, integration-wide actions,
+coordinator polling, and camera image requests retain their own request paths.
+The declaration does not impose a host-wide command or screenshot rate limit.

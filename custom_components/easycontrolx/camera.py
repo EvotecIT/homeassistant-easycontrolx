@@ -11,6 +11,8 @@ from .entity import EasyControlXEntity
 from .helpers import nested_get
 from .models import EasyControlXConfigEntry
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

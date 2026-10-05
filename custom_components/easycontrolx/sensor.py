@@ -30,6 +30,8 @@ from .entity import EasyControlXEntity
 from .helpers import nested_get, section_attributes
 from .models import EasyControlXConfigEntry
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class EasyControlXSensorDescription(SensorEntityDescription):
