@@ -15,6 +15,20 @@ pytest -q
 
 GitHub Actions also runs Home Assistant hassfest and HACS validation.
 
+## Diagnostics privacy
+
+Diagnostics redact credentials, host identity and address, certificate fingerprint,
+the preferred monitor identifier, and identifying names in host and service status.
+Free-text descriptions and summaries are redacted because hosts can include private
+content in those fields. Platform, protocol version, capabilities, availability,
+service state, and numeric health information remain available for troubleshooting.
+Redaction leaves config-entry data, options, and coordinator state unchanged.
+
+When adding host response fields, check whether they identify a person, machine,
+window, or application before including them in diagnostics. Review downloaded
+diagnostics before sharing them. The diagnostics regression tests cover the public
+status shape and service inventory; they do not establish live-host qualification.
+
 ## Integration boundary
 
 The EasyControlX host owns pairing, trust, desktop operations, and capabilities.
