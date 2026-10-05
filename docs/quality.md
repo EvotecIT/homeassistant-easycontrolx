@@ -39,7 +39,7 @@ contract or applicability audit. Exemptions require a rule-permitted explanation
 | Rule | State | Evidence or next acceptance step |
 | --- | --- | --- |
 | action-exceptions | Partial | API maps transport/authentication/status failures; audit every action and response-body failure. |
-| config-entry-unloading | Partial | Platform unload and last-entry service cleanup exist; verify repeated success/failure paths. |
+| config-entry-unloading | Partial | Platform unloading retains integration-wide actions; real HA tests verify successful unload rejects stale runtime data. Complete repeated reload and failure-resource proof. |
 | docs-configuration-parameters | Partial | Configuration guide exists; reconcile polling and preferred-monitor settings. |
 | docs-installation-parameters | Partial | HTTPS, tokens, pairing, and fingerprint approval are documented; validate instructions in HA. |
 | entity-unavailable | Partial | Coordinator and capability availability exist; exercise host, service, and active-window loss/recovery. |
