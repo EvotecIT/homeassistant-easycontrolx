@@ -24,30 +24,39 @@ from custom_components.easycontrolx.const import (
 async def test_actions_exist_without_loaded_host(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, DOMAIN, {})
     assert hass.services.has_service(DOMAIN, SERVICE_REFRESH)
-    with pytest.raises(ServiceValidationError, match="No EasyControlX hosts"):
+    with pytest.raises(ServiceValidationError) as error:
         await hass.services.async_call(DOMAIN, SERVICE_REFRESH, {}, blocking=True)
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == "no_hosts"
 
 
 async def test_actions_follow_entry_state_and_survive_unload(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
-        domain=DOMAIN, version=1, minor_version=1,
+        domain=DOMAIN,
+        version=1,
+        minor_version=1,
         data={CONF_BASE_URL: "https://host.local:5188", CONF_ACCESS_TOKEN: "token"},
     )
     entry.add_to_hass(hass)
     with (
         patch(
             "custom_components.easycontrolx.api.EasyControlXApiClient.async_get_status",
-            new_callable=AsyncMock, return_value={},
+            new_callable=AsyncMock,
+            return_value={},
         ),
         patch.object(hass.config_entries, "async_forward_entry_setups", new_callable=AsyncMock),
         patch.object(
-            hass.config_entries, "async_unload_platforms", new_callable=AsyncMock,
+            hass.config_entries,
+            "async_unload_platforms",
+            new_callable=AsyncMock,
         ) as unload,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         runtime = entry.runtime_data
         with patch.object(
-            runtime.coordinator, "async_request_refresh", new_callable=AsyncMock,
+            runtime.coordinator,
+            "async_request_refresh",
+            new_callable=AsyncMock,
         ) as refresh:
             await hass.services.async_call(DOMAIN, SERVICE_REFRESH, {}, blocking=True)
             refresh.assert_awaited_once()
@@ -58,8 +67,10 @@ async def test_actions_follow_entry_state_and_survive_unload(hass: HomeAssistant
             # Even retained runtime data must not permit commands after unload.
             entry.runtime_data = runtime
             refresh.reset_mock()
-            with pytest.raises(ServiceValidationError, match="not currently loaded"):
+            with pytest.raises(ServiceValidationError) as error:
                 await hass.services.async_call(DOMAIN, SERVICE_REFRESH, {}, blocking=True)
+            assert error.value.translation_domain == DOMAIN
+            assert error.value.translation_key == "host_not_loaded"
             refresh.assert_not_awaited()
 
 

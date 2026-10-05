@@ -230,7 +230,7 @@ async def _async_handle_media_action(call: ServiceCall) -> dict[str, Any]:
     _ensure_feature_supported(
         runtime_data,
         supported=supports_media(runtime_data.coordinator.data),
-        error_message="This EasyControlX host does not expose media controls.",
+        translation_key="media_unsupported",
     )
 
     action = cast(str, call.data[ATTR_ACTION])
@@ -245,14 +245,14 @@ async def _async_handle_audio_action(call: ServiceCall) -> dict[str, Any]:
     _ensure_feature_supported(
         runtime_data,
         supported=supports_audio(runtime_data.coordinator.data),
-        error_message="This EasyControlX host does not expose audio controls.",
+        translation_key="audio_unsupported",
     )
 
     action = cast(str, call.data[ATTR_ACTION])
     value = cast(int | None, call.data.get(ATTR_VALUE))
 
     if action == "SetOutputVolume" and value is None:
-        raise ServiceValidationError("The value field is required for SetOutputVolume.")
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="volume_required")
 
     response = await runtime_data.client.async_post_audio(action, value)
     await runtime_data.coordinator.async_request_refresh()
@@ -265,12 +265,12 @@ async def _async_handle_app_launch(call: ServiceCall) -> dict[str, Any]:
     _ensure_feature_supported(
         runtime_data,
         supported=supports_app_launch(runtime_data.coordinator.data),
-        error_message="This EasyControlX host does not expose app launch.",
+        translation_key="app_launch_unsupported",
     )
 
     target = normalize_optional_string(cast(str | None, call.data.get(ATTR_TARGET)))
     if target is None:
-        raise ServiceValidationError("The target field is required for app launch.")
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="target_required")
 
     response = await runtime_data.client.async_post_app_launch(
         target,
@@ -287,15 +287,13 @@ async def _async_handle_process_action(call: ServiceCall) -> dict[str, Any]:
     _ensure_feature_supported(
         runtime_data,
         supported=supports_process_control(runtime_data.coordinator.data),
-        error_message="This EasyControlX host does not expose process control.",
+        translation_key="process_control_unsupported",
     )
 
     process_id = cast(int | None, call.data.get(ATTR_PROCESS_ID))
     process_name = normalize_optional_string(cast(str | None, call.data.get(ATTR_PROCESS_NAME)))
     if process_id is None and process_name is None:
-        raise ServiceValidationError(
-            "Provide process_id or process_name for an EasyControlX process action."
-        )
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="process_required")
 
     response = await runtime_data.client.async_post_process(
         cast(str, call.data[ATTR_ACTION]),
@@ -313,7 +311,7 @@ async def _async_handle_list_processes(call: ServiceCall) -> dict[str, Any]:
     _ensure_feature_supported(
         runtime_data,
         supported=supports_process_inventory(runtime_data.coordinator.data),
-        error_message="This EasyControlX host does not expose process inventory.",
+        translation_key="process_inventory_unsupported",
     )
     return await runtime_data.client.async_get_processes()
 
@@ -324,12 +322,12 @@ async def _async_handle_service_action(call: ServiceCall) -> dict[str, Any]:
     _ensure_feature_supported(
         runtime_data,
         supported=supports_service_control(runtime_data.coordinator.data),
-        error_message="This EasyControlX host does not expose managed service control.",
+        translation_key="service_control_unsupported",
     )
 
     service_name = normalize_optional_string(cast(str | None, call.data.get(ATTR_SERVICE_NAME)))
     if service_name is None:
-        raise ServiceValidationError("The service_name field is required for service control.")
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="service_required")
 
     response = await runtime_data.client.async_post_service(
         cast(str, call.data[ATTR_ACTION]),
@@ -345,7 +343,7 @@ async def _async_handle_list_services(call: ServiceCall) -> dict[str, Any]:
     _ensure_feature_supported(
         runtime_data,
         supported=supports_service_inventory(runtime_data.coordinator.data),
-        error_message="This EasyControlX host does not expose managed services.",
+        translation_key="service_inventory_unsupported",
     )
 
     cached_items = service_inventory_items(runtime_data.coordinator.data)
@@ -365,7 +363,7 @@ async def _async_handle_browse_files(call: ServiceCall) -> dict[str, Any]:
     _ensure_feature_supported(
         runtime_data,
         supported=supports_file_browse(runtime_data.coordinator.data),
-        error_message="This EasyControlX host does not expose file browsing.",
+        translation_key="file_browse_unsupported",
     )
     return await runtime_data.client.async_get_files_browse(
         cast(str | None, call.data.get(ATTR_PATH))
@@ -378,7 +376,7 @@ async def _async_handle_copy_file(call: ServiceCall) -> dict[str, Any]:
     _ensure_feature_supported(
         runtime_data,
         supported=supports_file_copy(runtime_data.coordinator.data),
-        error_message="This EasyControlX host does not expose file copy.",
+        translation_key="file_copy_unsupported",
     )
 
     source_path = normalize_optional_string(cast(str | None, call.data.get(ATTR_SOURCE_PATH)))
@@ -387,7 +385,7 @@ async def _async_handle_copy_file(call: ServiceCall) -> dict[str, Any]:
     )
     if source_path is None or destination_path is None:
         raise ServiceValidationError(
-            "The source_path and destination_path fields are required for file copy."
+            translation_domain=DOMAIN, translation_key="copy_paths_required"
         )
 
     response = await runtime_data.client.async_post_files_copy(
@@ -436,7 +434,9 @@ def _ensure_supported_power_action(runtime_data: EasyControlXRuntimeData, action
     supported_actions = supported_power_actions(runtime_data.coordinator.data)
     if action not in supported_actions:
         raise ServiceValidationError(
-            f"This EasyControlX host does not expose the power action '{action}'."
+            translation_domain=DOMAIN,
+            translation_key="power_unsupported",
+            translation_placeholders={"action": action},
         )
 
 
@@ -444,11 +444,11 @@ def _ensure_feature_supported(
     runtime_data: EasyControlXRuntimeData,
     *,
     supported: bool,
-    error_message: str,
+    translation_key: str,
 ) -> None:
     """Raise a clean validation error when a host feature is unavailable."""
     if not supported:
-        raise ServiceValidationError(error_message)
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key=translation_key)
 
 
 def _resolve_runtime_data(
@@ -464,21 +464,25 @@ def _resolve_runtime_data(
         entry = next((item for item in entries if item.entry_id == requested_entry_id), None)
         if entry is None:
             raise ServiceValidationError(
-                f"EasyControlX config entry '{requested_entry_id}' was not found."
+                translation_domain=DOMAIN,
+                translation_key="host_not_found",
+                translation_placeholders={"entry_id": requested_entry_id},
             )
     elif len(entries) == 1:
         entry = entries[0]
     elif not entries:
-        raise ServiceValidationError("No EasyControlX hosts are configured.")
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="no_hosts")
     else:
         raise ServiceValidationError(
-            "Multiple EasyControlX hosts are configured; provide config_entry_id."
+            translation_domain=DOMAIN, translation_key="host_selection_required"
         )
 
     runtime_data = getattr(entry, "runtime_data", None)
     if entry.state is not ConfigEntryState.LOADED or runtime_data is None:
         raise ServiceValidationError(
-            f"EasyControlX host '{entry.title or entry.entry_id}' is not currently loaded."
+            translation_domain=DOMAIN,
+            translation_key="host_not_loaded",
+            translation_placeholders={"host": entry.title or entry.entry_id},
         )
 
     return cast(EasyControlXRuntimeData, runtime_data)

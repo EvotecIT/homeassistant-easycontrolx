@@ -128,10 +128,12 @@ def _make_entry(
         ),
         async_get_processes=AsyncMock(return_value={"totalProcessCount": 42, "processes": []}),
         async_post_process=AsyncMock(return_value={"accepted": True, "operationId": "process"}),
-        async_get_services=AsyncMock(return_value={
-            "totalServiceCount": 2,
-            "services": DEFAULT_STATUS["serviceInventory"]["services"],
-        }),
+        async_get_services=AsyncMock(
+            return_value={
+                "totalServiceCount": 2,
+                "services": DEFAULT_STATUS["serviceInventory"]["services"],
+            }
+        ),
         async_post_service=AsyncMock(return_value={"accepted": True, "operationId": "service"}),
         async_get_files_browse=AsyncMock(return_value={"currentPath": "C:\\", "entries": []}),
         async_post_files_copy=AsyncMock(return_value={"accepted": True, "operationId": "copy"}),
@@ -172,6 +174,7 @@ async def test_register_services() -> None:
     assert hass.services.has_service(DOMAIN, SERVICE_REFRESH)
     assert hass.services._handlers[(DOMAIN, SERVICE_LIST_PROCESSES)][2] == SupportsResponse.ONLY
     assert hass.services._handlers[(DOMAIN, SERVICE_POWER_ACTION)][2] == SupportsResponse.OPTIONAL
+
 
 @pytest.mark.asyncio
 async def test_power_action_targets_only_configured_host() -> None:
@@ -220,8 +223,10 @@ async def test_audio_set_volume_requires_value() -> None:
     entry, _client, _coordinator = _make_entry("host-one")
     hass = _make_hass([entry])
 
-    with pytest.raises(ServiceValidationError, match="value field is required"):
+    with pytest.raises(ServiceValidationError) as error:
         await _async_handle_audio_action(_make_call(hass, {ATTR_ACTION: "SetOutputVolume"}))
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == "volume_required"
 
 
 @pytest.mark.asyncio
@@ -230,8 +235,10 @@ async def test_refresh_requires_config_entry_id_when_multiple_hosts_exist() -> N
     entry_two, _client_two, _coordinator_two = _make_entry("host-two")
     hass = _make_hass([entry_one, entry_two])
 
-    with pytest.raises(ServiceValidationError, match="provide config_entry_id"):
+    with pytest.raises(ServiceValidationError) as error:
         await _async_handle_refresh(_make_call(hass, {}))
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == "host_selection_required"
 
 
 @pytest.mark.asyncio
@@ -284,7 +291,7 @@ async def test_process_action_requires_process_identifier() -> None:
     entry, _client, _coordinator = _make_entry("host-one")
     hass = _make_hass([entry])
 
-    with pytest.raises(ServiceValidationError, match="Provide process_id or process_name"):
+    with pytest.raises(ServiceValidationError) as error:
         await _async_handle_process_action(
             _make_call(
                 hass,
@@ -294,6 +301,8 @@ async def test_process_action_requires_process_identifier() -> None:
                 },
             )
         )
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == "process_required"
 
 
 @pytest.mark.asyncio
@@ -412,38 +421,62 @@ async def test_copy_file_returns_action_response() -> None:
 
 
 @pytest.mark.asyncio
-async def test_capability_checks_raise_clean_errors() -> None:
+@pytest.mark.parametrize(
+    ("handler", "key"),
+    [
+        (_async_handle_media_action, "media_unsupported"),
+        (_async_handle_audio_action, "audio_unsupported"),
+        (_async_handle_app_launch, "app_launch_unsupported"),
+        (_async_handle_process_action, "process_control_unsupported"),
+        (_async_handle_list_processes, "process_inventory_unsupported"),
+        (_async_handle_service_action, "service_control_unsupported"),
+        (_async_handle_list_services, "service_inventory_unsupported"),
+        (_async_handle_browse_files, "file_browse_unsupported"),
+        (_async_handle_copy_file, "file_copy_unsupported"),
+    ],
+)
+async def test_capability_checks_raise_clean_errors(hass, handler, key) -> None:
+    from homeassistant.helpers.translation import async_get_translations
+
+    resources = await async_get_translations(hass, "fr", "exceptions", {DOMAIN})
     unsupported_status = {
         "device": {"capabilities": []},
         "power": {"supportedActions": []},
     }
-    entry, _client, _coordinator = _make_entry("host-one", status=unsupported_status)
-    hass = _make_hass([entry])
-
-    with pytest.raises(ServiceValidationError, match="does not expose app launch"):
-        await _async_handle_app_launch(_make_call(hass, {ATTR_TARGET: "notepad.exe"}))
-
-    with pytest.raises(ServiceValidationError, match="does not expose file browsing"):
-        await _async_handle_browse_files(_make_call(hass, {}))
+    entry, client, _coordinator = _make_entry("host-one", status=unsupported_status)
+    service_hass = _make_hass([entry])
+    with pytest.raises(ServiceValidationError) as error:
+        await handler(_make_call(service_hass, {}))
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == key
+    assert resources[f"component.{DOMAIN}.exceptions.{key}.message"]
+    for method in vars(client).values():
+        method.assert_not_awaited()
 
 
 def test_resolve_runtime_data_requires_known_entry_id() -> None:
     entry, _client, _coordinator = _make_entry("host-one")
     hass = _make_hass([entry])
 
-    with pytest.raises(ServiceValidationError, match="was not found"):
+    with pytest.raises(ServiceValidationError) as error:
         _resolve_runtime_data(
             hass,
             _make_call(hass, {CONF_CONFIG_ENTRY_ID: "missing-entry"}),
         )
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == "host_not_found"
 
 
 def test_resolve_runtime_data_requires_loaded_runtime_data() -> None:
     entry = SimpleNamespace(
-        entry_id="host-one-entry", title="host-one",
-        state=ConfigEntryState.NOT_LOADED, runtime_data=None,
+        entry_id="host-one-entry",
+        title="host-one",
+        state=ConfigEntryState.NOT_LOADED,
+        runtime_data=None,
     )
     hass = _make_hass([entry])
 
-    with pytest.raises(ServiceValidationError, match="not currently loaded"):
+    with pytest.raises(ServiceValidationError) as error:
         _resolve_runtime_data(hass, _make_call(hass, {}))
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == "host_not_loaded"

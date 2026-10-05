@@ -190,6 +190,63 @@
     },
     "request_failed": {
       "message": "The EasyControlX host could not complete the request. Check the host and try again."
+    },
+    "volume_required": {
+      "message": "The value field is required for SetOutputVolume."
+    },
+    "target_required": {
+      "message": "The target field is required for app launch."
+    },
+    "process_required": {
+      "message": "Provide process_id or process_name for an EasyControlX process action."
+    },
+    "service_required": {
+      "message": "The service_name field is required for service control."
+    },
+    "copy_paths_required": {
+      "message": "The source_path and destination_path fields are required for file copy."
+    },
+    "no_hosts": {
+      "message": "No EasyControlX hosts are configured."
+    },
+    "host_selection_required": {
+      "message": "Multiple EasyControlX hosts are configured; provide config_entry_id."
+    },
+    "media_unsupported": {
+      "message": "This EasyControlX host does not expose media controls."
+    },
+    "audio_unsupported": {
+      "message": "This EasyControlX host does not expose audio controls."
+    },
+    "app_launch_unsupported": {
+      "message": "This EasyControlX host does not expose app launch."
+    },
+    "process_control_unsupported": {
+      "message": "This EasyControlX host does not expose process control."
+    },
+    "process_inventory_unsupported": {
+      "message": "This EasyControlX host does not expose process inventory."
+    },
+    "service_control_unsupported": {
+      "message": "This EasyControlX host does not expose managed service control."
+    },
+    "service_inventory_unsupported": {
+      "message": "This EasyControlX host does not expose managed services."
+    },
+    "file_browse_unsupported": {
+      "message": "This EasyControlX host does not expose file browsing."
+    },
+    "file_copy_unsupported": {
+      "message": "This EasyControlX host does not expose file copy."
+    },
+    "power_unsupported": {
+      "message": "This EasyControlX host does not expose the power action '{action}'."
+    },
+    "host_not_found": {
+      "message": "EasyControlX config entry '{entry_id}' was not found."
+    },
+    "host_not_loaded": {
+      "message": "EasyControlX host '{host}' is not currently loaded."
     }
   }
 }

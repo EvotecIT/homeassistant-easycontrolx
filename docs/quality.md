@@ -47,7 +47,7 @@ contract or applicability audit. Exemptions require a rule-permitted explanation
 | log-when-unavailable | Review | Inspect one disconnect/reconnect cycle for useful non-repeating logging. |
 | parallel-updates | Partial | Buttons and switches declare one parallel update per platform and entry; coordinator-state platforms declare zero. A real HA multi-button action reproduces overlapping commands before the change and verifies serialization afterward. Integration-wide actions, polling, and camera image requests are outside this semaphore. |
 | reauthentication-flow | Partial | Reauth and certificate-change checks have tests; verify actual UI and credential replacement. |
-| test-coverage | Gap | 191 tests pass on minimum/current HA. The measured statement-coverage baseline at 70f7a29 is 95.2% (1,183 of 1,242 statements), including 100% of camera behavior. Full flow coverage and remaining meaningful module paths still need qualification. |
+| test-coverage | Gap | 202 tests pass on minimum/current HA. The measured statement-coverage baseline at 70f7a29 is 95.2% (1,183 of 1,242 statements), including 100% of camera behavior. Full flow coverage and remaining meaningful module paths still need qualification. |
 
 ## Gold
 
@@ -69,7 +69,7 @@ contract or applicability audit. Exemptions require a rule-permitted explanation
 | entity-device-class | Partial | Platform metadata exists; audit units, classes, and state classes. |
 | entity-disabled-by-default | Partial | Active-window preview is disabled by default; audit other private/noisy entities. |
 | entity-translations | Partial | Entities use translation keys; verify complete supported-language names and fallback. |
-| exception-translations | Partial | Domain actions, buttons, switches, previews, and refreshes translate client failures through shared HA exception keys. Tests verify English fallback, preserved causes, private-response exclusion from displayed messages, and authentication recovery. Literal service-validation messages, rendered frontend, and installed-artifact proof remain open. |
+| exception-translations | Partial | Domain actions, buttons, switches, previews, and refreshes translate client failures through shared HA exception keys. Tests verify English fallback, preserved causes, private-response exclusion from displayed messages, and authentication recovery. Service-validation errors also use keys and named placeholders; all unsupported-capability paths reject before any host call. Rendered frontend and installed-artifact proof remain open. |
 | icon-translations | Review | Audit custom versus device-class icons and add applicable icon translations. |
 | reconfiguration-flow | Partial | Reconfigure validates destination/identity/fingerprint; verify installed UI and preserved bindings. |
 | repair-issues | Partial | Authentication and changed-certificate flows exist; audit other failures requiring intervention. |

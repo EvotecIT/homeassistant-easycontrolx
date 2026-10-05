@@ -112,3 +112,62 @@ async def test_refresh_errors_preserve_authentication_recovery(hass, failure_typ
     assert error.value.translation_key == key
     assert error.value.__cause__ is failure
     assert "private-server-response" not in str(error.value)
+
+
+@pytest.mark.parametrize(
+    ("case", "key", "placeholders"),
+    [
+        ("unsupported", "power_unsupported", {"action": "Sleep"}),
+        ("missing", "host_not_found", {"entry_id": "missing-entry"}),
+        ("unloaded", "host_not_loaded", {"host": "Test host"}),
+    ],
+)
+async def test_action_validation_translates_placeholders(hass, case, key, placeholders):
+    from homeassistant.exceptions import ServiceValidationError
+
+    hass.config.language = "fr"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        minor_version=1,
+        title="Test host",
+        data={
+            "base_url": "https://host.local:5188",
+            "access_token": "token",
+            "device_id": "host-one",
+        },
+    )
+    entry.add_to_hass(hass)
+    status = {
+        "device": {"deviceId": "host-one", "platform": "Windows"},
+        "power": {"supportedActions": ["Lock"]},
+    }
+    with patch(
+        "custom_components.easycontrolx.api.EasyControlXApiClient.async_get_status",
+        new_callable=AsyncMock,
+        return_value=status,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        resources = await async_get_translations(hass, "fr", "exceptions", {DOMAIN})
+        client = entry.runtime_data.client
+        data = {"action": "Sleep" if case == "unsupported" else "Lock"}
+        if case == "missing":
+            data["config_entry_id"] = "missing-entry"
+        if case == "unloaded":
+            assert await hass.config_entries.async_unload(entry.entry_id)
+        with patch.object(client, "async_post_power", new_callable=AsyncMock) as action:
+            with pytest.raises(ServiceValidationError) as error:
+                await hass.services.async_call(
+                    DOMAIN,
+                    SERVICE_POWER_ACTION,
+                    data,
+                    blocking=True,
+                )
+            action.assert_not_awaited()
+        assert error.value.translation_domain == DOMAIN
+        assert error.value.translation_key == key
+        assert error.value.translation_placeholders == placeholders
+        message = resources[f"component.{DOMAIN}.exceptions.{key}.message"]
+        assert str(error.value) == message.format(**placeholders).rstrip(".")
+        if case != "unloaded":
+            assert await hass.config_entries.async_unload(entry.entry_id)
