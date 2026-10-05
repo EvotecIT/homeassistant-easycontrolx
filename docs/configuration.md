@@ -70,6 +70,7 @@ See [the entity model](ENTITY_MODEL.md) for the detailed mapping.
 | Pairing pending | Approve the request on the host and enter the matching code |
 | Pairing expired | Start a new pairing flow |
 | Cannot connect | Check the host is running, reachable, and serving the expected HTTPS API |
+| Unexpected redirect | Configure the final HTTPS origin/base path and make the reverse proxy serve the API directly without redirecting |
 | Missing action | Check whether the host advertises that capability |
 
 Download diagnostics after reproducing an issue. Review the file before posting,

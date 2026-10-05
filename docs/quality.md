@@ -47,7 +47,7 @@ contract or applicability audit. Exemptions require a rule-permitted explanation
 | log-when-unavailable | Review | Inspect one disconnect/reconnect cycle for useful non-repeating logging. |
 | parallel-updates | Review | Choose and verify explicit platform concurrency against the host's supported request model. |
 | reauthentication-flow | Partial | Reauth and certificate-change checks have tests; verify actual UI and credential replacement. |
-| test-coverage | Gap | Current overall statement coverage is 95.2% (1,180 of 1,239 statements), including 100% of camera behavior. Full flow coverage and remaining meaningful module paths still need qualification. |
+| test-coverage | Gap | 161 tests pass on minimum/current HA. Current overall statement coverage is 95.2% (1,183 of 1,242 statements), including 100% of camera behavior. Full flow coverage and remaining meaningful module paths still need qualification. |
 
 ## Gold
 
@@ -80,7 +80,7 @@ contract or applicability audit. Exemptions require a rule-permitted explanation
 | Rule | State | Evidence or next acceptance step |
 | --- | --- | --- |
 | async-dependency | Partial | API uses aiohttp; cancellation/body/pairing response cleanup has regressions. Complete live resource proof. |
-| inject-websession | Partial | Setup/flows inject HA's shared session; verify all ownership paths and ensure no shared-session closure. |
+| inject-websession | Partial | Setup/flows inject HA's shared session. Local HTTPS tests verify caller ownership, status/decompression policy, pairing errors, and prevention of cross-origin token forwarding through redirects. Live ownership/resource qualification remains open. |
 | strict-typing | Source gate | Strict mypy covers all 18 production modules without import suppression or type-ignore exemptions. CI tests the declared minimum and current qualification HA versions. |
 
 ## Release qualification

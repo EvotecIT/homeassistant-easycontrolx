@@ -346,6 +346,9 @@ class EasyControlXApiClient:
                 headers=headers,
                 json=json_body,
                 params=params,
+                allow_redirects=False,
+                raise_for_status=False,
+                auto_decompress=True,
                 timeout=ClientTimeout(total=DEFAULT_TIMEOUT_SECONDS),
                 ssl=self._ssl or True,
             )
@@ -361,6 +364,10 @@ class EasyControlXApiClient:
             ) from err
         except (ClientError, TimeoutError) as err:
             raise CannotConnect from err
+
+        if 300 <= response.status < 400:
+            response.release()
+            raise ApiError("The EasyControlX host returned an unexpected redirect.")
 
         if path == "/api/v1/pair/confirm":
             if response.status == 202:
