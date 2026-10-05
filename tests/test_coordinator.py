@@ -42,8 +42,14 @@ async def test_certificate_rotation_starts_reauthentication() -> None:
     coordinator = EasyControlXCoordinator.__new__(EasyControlXCoordinator)
     coordinator.client = client
 
-    with pytest.raises(ConfigEntryAuthFailed, match="certificate changed"):
+    with pytest.raises(ConfigEntryAuthFailed) as error:
         await coordinator._async_update_data()
+    assert error.value.translation_domain == "easycontrolx"
+    assert error.value.translation_key == (
+        "certificate_untrusted"
+        if isinstance(client.async_get_status.side_effect, TLSCertificateUntrusted)
+        else "certificate_changed"
+    )
 
 
 @pytest.mark.asyncio
@@ -57,8 +63,10 @@ async def test_optional_inventory_fails_closed_on_certificate_rotation() -> None
         "services": {"itemCount": 1},
     }
 
-    with pytest.raises(ConfigEntryAuthFailed, match="certificate changed"):
+    with pytest.raises(ConfigEntryAuthFailed) as error:
         await coordinator._async_enrich_optional_status(status)
+    assert error.value.translation_domain == "easycontrolx"
+    assert error.value.translation_key == "certificate_changed"
 
 
 @pytest.mark.asyncio
@@ -68,5 +76,11 @@ async def test_untrusted_certificate_starts_reauthentication() -> None:
     coordinator = EasyControlXCoordinator.__new__(EasyControlXCoordinator)
     coordinator.client = client
 
-    with pytest.raises(ConfigEntryAuthFailed, match="fingerprint approval"):
+    with pytest.raises(ConfigEntryAuthFailed) as error:
         await coordinator._async_update_data()
+    assert error.value.translation_domain == "easycontrolx"
+    assert error.value.translation_key == (
+        "certificate_untrusted"
+        if isinstance(client.async_get_status.side_effect, TLSCertificateUntrusted)
+        else "certificate_changed"
+    )

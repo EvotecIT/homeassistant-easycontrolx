@@ -18,6 +18,7 @@ from .capabilities import (
     supports_service_inventory,
 )
 from .entity import EasyControlXEntity
+from .ha_errors import translate_api_errors
 from .helpers import nested_get
 from .managed_services import EasyControlXManagedServiceEntity
 from .models import EasyControlXConfigEntry
@@ -120,8 +121,9 @@ class EasyControlXButton(EasyControlXEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Trigger the button action."""
-        await self.entity_description.press_fn(self._config_entry)
-        await self.coordinator.async_request_refresh()
+        with translate_api_errors():
+            await self.entity_description.press_fn(self._config_entry)
+            await self.coordinator.async_request_refresh()
 
 
 class EasyControlXManagedServiceRestartButton(EasyControlXManagedServiceEntity, ButtonEntity):
@@ -155,8 +157,9 @@ class EasyControlXManagedServiceRestartButton(EasyControlXManagedServiceEntity, 
 
     async def async_press(self) -> None:
         """Restart the managed service."""
-        await self._config_entry.runtime_data.client.async_post_service(
-            "Restart",
-            self.service_name,
-        )
-        await self.coordinator.async_request_refresh()
+        with translate_api_errors():
+            await self._config_entry.runtime_data.client.async_post_service(
+                "Restart",
+                self.service_name,
+            )
+            await self.coordinator.async_request_refresh()

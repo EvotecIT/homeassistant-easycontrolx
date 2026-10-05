@@ -9,7 +9,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .api import EasyControlXApiClient
 from .capabilities import supports_service_inventory
-from .const import UPDATE_INTERVAL_FALLBACK
+from .const import DOMAIN, UPDATE_INTERVAL_FALLBACK
 from .exceptions import (
     ApiError,
     CannotConnect,
@@ -17,6 +17,7 @@ from .exceptions import (
     TLSCertificateUntrusted,
     TLSFingerprintMismatch,
 )
+from .ha_errors import api_error_translation_key
 from .models import EasyControlXStatus
 
 LOGGER = logging.getLogger(__name__)
@@ -44,18 +45,16 @@ class EasyControlXCoordinator(DataUpdateCoordinator[EasyControlXStatus]):
         """Fetch fresh data from the host."""
         try:
             status = await self.client.async_get_status()
-        except InvalidAuth as err:
-            raise ConfigEntryAuthFailed("EasyControlX authentication failed.") from err
-        except TLSFingerprintMismatch as err:
+        except (InvalidAuth, TLSFingerprintMismatch, TLSCertificateUntrusted) as err:
             raise ConfigEntryAuthFailed(
-                "EasyControlX host certificate changed; verify its fingerprint."
-            ) from err
-        except TLSCertificateUntrusted as err:
-            raise ConfigEntryAuthFailed(
-                "EasyControlX host certificate requires fingerprint approval."
+                translation_domain=DOMAIN,
+                translation_key=api_error_translation_key(err),
             ) from err
         except (CannotConnect, ApiError) as err:
-            raise UpdateFailed(f"Unable to refresh EasyControlX host status: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key=api_error_translation_key(err),
+            ) from err
 
         return await self._async_enrich_optional_status(status)
 
@@ -64,15 +63,10 @@ class EasyControlXCoordinator(DataUpdateCoordinator[EasyControlXStatus]):
         if supports_service_inventory(status):
             try:
                 status["serviceInventory"] = await self.client.async_get_services()
-            except InvalidAuth as err:
-                raise ConfigEntryAuthFailed("EasyControlX authentication failed.") from err
-            except TLSFingerprintMismatch as err:
+            except (InvalidAuth, TLSFingerprintMismatch, TLSCertificateUntrusted) as err:
                 raise ConfigEntryAuthFailed(
-                    "EasyControlX host certificate changed; verify its fingerprint."
-                ) from err
-            except TLSCertificateUntrusted as err:
-                raise ConfigEntryAuthFailed(
-                    "EasyControlX host certificate requires fingerprint approval."
+                    translation_domain=DOMAIN,
+                    translation_key=api_error_translation_key(err),
                 ) from err
             except (CannotConnect, ApiError) as err:
                 LOGGER.debug(

@@ -97,3 +97,17 @@ async def test_active_window_preview_tracks_current_window_and_disappearance(cam
     assert camera.available is False
     assert await camera.async_camera_image() is None
     runtime.client.async_get_window_preview.assert_not_awaited()
+
+
+async def test_desktop_preview_translates_host_failure(camera_entry):
+    from homeassistant.exceptions import HomeAssistantError
+
+    from custom_components.easycontrolx.exceptions import CannotConnect
+
+    failure = CannotConnect("private-host-detail")
+    camera_entry.runtime_data.client.async_get_desktop_preview.side_effect = failure
+    camera = EasyControlXDesktopPreviewCamera(camera_entry)
+    with pytest.raises(HomeAssistantError) as error:
+        await camera.async_camera_image()
+    assert error.value.translation_key == "host_unavailable"
+    assert error.value.__cause__ is failure

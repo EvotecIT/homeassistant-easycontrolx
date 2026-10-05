@@ -55,6 +55,7 @@ from .const import (
     SERVICE_REFRESH,
     SERVICE_SERVICE_ACTION,
 )
+from .ha_errors import translate_api_errors
 from .helpers import normalize_optional_string
 from .models import EasyControlXRuntimeData
 
@@ -417,10 +418,14 @@ def _register_service(
     if hass.services.has_service(DOMAIN, service_name):
         return
 
+    async def translated_handler(call: ServiceCall) -> dict[str, Any]:
+        with translate_api_errors():
+            return await handler(call)
+
     hass.services.async_register(
         DOMAIN,
         service_name,
-        handler,
+        translated_handler,
         schema=schema,
         supports_response=supports_response,
     )

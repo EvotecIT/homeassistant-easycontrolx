@@ -71,3 +71,19 @@ def test_managed_service_restart_button_is_unavailable_when_service_is_missing()
     button = EasyControlXManagedServiceRestartButton(entry, missing_service)
 
     assert button.available is False
+
+
+async def test_restart_button_translates_host_failure():
+    from homeassistant.exceptions import HomeAssistantError
+
+    from custom_components.easycontrolx.exceptions import CannotConnect
+
+    entry, service, coordinator = _make_entry()
+    failure = CannotConnect("private-host-detail")
+    entry.runtime_data.client.async_post_service.side_effect = failure
+    button = EasyControlXManagedServiceRestartButton(entry, service)
+    with pytest.raises(HomeAssistantError) as error:
+        await button.async_press()
+    assert error.value.translation_key == "host_unavailable"
+    assert error.value.__cause__ is failure
+    coordinator.async_request_refresh.assert_not_awaited()

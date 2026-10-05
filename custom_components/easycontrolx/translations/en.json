@@ -174,5 +174,22 @@
         "name": "Active window preview"
       }
     }
+  },
+  "exceptions": {
+    "certificate_changed": {
+      "message": "The EasyControlX host certificate changed; verify its fingerprint and reauthenticate."
+    },
+    "certificate_untrusted": {
+      "message": "The EasyControlX host certificate requires fingerprint approval. Reauthenticate to approve it."
+    },
+    "authentication_failed": {
+      "message": "EasyControlX authentication failed. Reauthenticate the integration."
+    },
+    "host_unavailable": {
+      "message": "Cannot reach the EasyControlX host. Check its address, network connection, and service availability."
+    },
+    "request_failed": {
+      "message": "The EasyControlX host could not complete the request. Check the host and try again."
+    }
   }
 }
