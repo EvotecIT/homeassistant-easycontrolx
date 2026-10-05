@@ -3,3 +3,4 @@ homeassistant
 pytest
 pytest-asyncio
 ruff
+mypy==2.4.0

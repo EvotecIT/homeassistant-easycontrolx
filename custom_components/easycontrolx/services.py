@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
 from typing import Any, cast
 
 import voluptuous as vol
@@ -426,7 +427,7 @@ async def _async_handle_refresh(call: ServiceCall) -> dict[str, Any]:
 def _register_service(
     hass: HomeAssistant,
     service_name: str,
-    handler,
+    handler: Callable[[ServiceCall], Coroutine[Any, Any, dict[str, Any]]],
     schema: vol.Schema,
     *,
     supports_response: SupportsResponse,

@@ -81,12 +81,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: EasyControlXConfigEntry
     return True
 
 
-async def async_reload_entry(hass: HomeAssistant, entry) -> None:
+async def async_reload_entry(hass: HomeAssistant, entry: EasyControlXConfigEntry) -> None:
     """Reload the integration after options or config changes."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: EasyControlXConfigEntry) -> bool:
     """Migrate older config entries forward."""
     if entry.version > 1:
         return False

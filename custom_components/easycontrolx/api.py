@@ -7,6 +7,7 @@ from aiohttp import (
     ClientConnectorCertificateError,
     ClientConnectorSSLError,
     ClientError,
+    ClientResponse,
     ClientResponseError,
     ClientSession,
     ClientTimeout,
@@ -293,9 +294,14 @@ class EasyControlXApiClient:
             auth_required=auth_required,
         )
         try:
-            return await response.json()
+            payload = await response.json()
+            if not isinstance(payload, dict):
+                raise ApiError("EasyControlX returned an invalid JSON response.")
+            return payload
         except (ClientError, ValueError) as err:
             raise ApiError("EasyControlX returned an invalid JSON response.") from err
+        finally:
+            response.release()
 
     async def _async_request_bytes(
         self,
@@ -312,7 +318,10 @@ class EasyControlXApiClient:
             params=params,
             auth_required=auth_required,
         )
-        return await response.read()
+        try:
+            return await response.read()
+        finally:
+            response.release()
 
     async def _async_request(
         self,
@@ -322,7 +331,7 @@ class EasyControlXApiClient:
         params: dict[str, Any] | None = None,
         json_body: dict[str, Any] | None = None,
         auth_required: bool,
-    ):
+    ) -> ClientResponse:
         """Perform a request and map transport/auth errors."""
         headers: dict[str, str] = {}
         if auth_required:
@@ -338,7 +347,7 @@ class EasyControlXApiClient:
                 json=json_body,
                 params=params,
                 timeout=ClientTimeout(total=DEFAULT_TIMEOUT_SECONDS),
-                ssl=self._ssl,
+                ssl=self._ssl or True,
             )
         except ServerFingerprintMismatch as err:
             raise TLSFingerprintMismatch(
@@ -355,15 +364,19 @@ class EasyControlXApiClient:
 
         if path == "/api/v1/pair/confirm":
             if response.status == 202:
+                response.release()
                 raise PairingPending
             if response.status == 410:
+                response.release()
                 raise PairingExpired
             if response.status in (401, 403):
+                response.release()
                 raise ApiError("The EasyControlX pairing request was rejected.")
 
         try:
             response.raise_for_status()
         except ClientResponseError as err:
+            response.release()
             if err.status in (401, 403):
                 raise InvalidAuth from err
             raise ApiError(f"EasyControlX request failed with status {err.status}.") from err

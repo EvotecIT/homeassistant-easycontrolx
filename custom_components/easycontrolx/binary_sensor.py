@@ -92,7 +92,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up EasyControlX binary sensors."""
     status = entry.runtime_data.coordinator.data
-    entities: list[EasyControlXBinarySensor] = []
+    entities: list[BinarySensorEntity] = []
 
     for description in BINARY_SENSORS:
         if (

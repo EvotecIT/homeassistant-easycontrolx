@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from .helpers import nested_get
 
 CORE_DESKTOP_PREVIEW = "desktop.preview"
@@ -38,53 +40,53 @@ LEGACY_WINDOWS_LIST = "windows.list"
 LEGACY_WINDOWS_PREVIEW = "windows.preview"
 
 
-def device_capabilities(status: dict) -> set[str]:
+def device_capabilities(status: dict[str, Any]) -> set[str]:
     """Return the normalized capability set from status data."""
     capabilities = nested_get(status, "device", "capabilities", default=[]) or []
     return {str(capability) for capability in capabilities}
 
 
-def has_any_capability(status: dict, *capabilities: str) -> bool:
+def has_any_capability(status: dict[str, Any], *capabilities: str) -> bool:
     """Check whether any capability is present."""
     available = device_capabilities(status)
     return any(capability in available for capability in capabilities)
 
 
-def status_has_section(status: dict, section: str) -> bool:
+def status_has_section(status: dict[str, Any], section: str) -> bool:
     """Check if a status section exists and is populated."""
     value = nested_get(status, section)
     return value is not None
 
 
-def is_platform(status: dict, platform_name: str) -> bool:
+def is_platform(status: dict[str, Any], platform_name: str) -> bool:
     """Check the platform name from status."""
     platform = str(nested_get(status, "device", "platform", default="")).lower()
     return platform == platform_name.lower()
 
 
-def supports_audio(status: dict) -> bool:
+def supports_audio(status: dict[str, Any]) -> bool:
     """Return whether audio entities should exist."""
     return has_any_capability(status, CORE_AUDIO_OUTPUT) or status_has_section(status, "audio")
 
 
-def supports_media(status: dict) -> bool:
+def supports_media(status: dict[str, Any]) -> bool:
     """Return whether media entities should exist."""
     return has_any_capability(status, CORE_MEDIA) or status_has_section(status, "media")
 
 
-def supports_bluetooth(status: dict) -> bool:
+def supports_bluetooth(status: dict[str, Any]) -> bool:
     """Return whether Bluetooth entities should exist."""
     return has_any_capability(status, CORE_BLUETOOTH_LIST) or status_has_section(
         status, "bluetooth"
     )
 
 
-def supports_app_launch(status: dict) -> bool:
+def supports_app_launch(status: dict[str, Any]) -> bool:
     """Return whether application launch services should exist."""
     return has_any_capability(status, CORE_APPLICATIONS_LAUNCH)
 
 
-def supports_system_metrics(status: dict) -> bool:
+def supports_system_metrics(status: dict[str, Any]) -> bool:
     """Return whether system telemetry entities should exist."""
     return has_any_capability(
         status,
@@ -94,35 +96,35 @@ def supports_system_metrics(status: dict) -> bool:
     ) or status_has_section(status, "system")
 
 
-def supports_storage_metrics(status: dict) -> bool:
+def supports_storage_metrics(status: dict[str, Any]) -> bool:
     """Return whether storage telemetry entities should exist."""
     return has_any_capability(status, CORE_SYSTEM_STORAGE) or status_has_section(status, "storage")
 
 
-def supports_network_metrics(status: dict) -> bool:
+def supports_network_metrics(status: dict[str, Any]) -> bool:
     """Return whether network telemetry entities should exist."""
     return has_any_capability(status, CORE_SYSTEM_NETWORK) or status_has_section(status, "network")
 
 
-def supports_service_inventory(status: dict) -> bool:
+def supports_service_inventory(status: dict[str, Any]) -> bool:
     """Return whether curated service inventory entities should exist."""
     return has_any_capability(status, WINDOWS_SERVICES_LIST) or status_has_section(
         status, "services"
     )
 
 
-def supports_service_control(status: dict) -> bool:
+def supports_service_control(status: dict[str, Any]) -> bool:
     """Return whether curated service control services should exist."""
     return has_any_capability(status, WINDOWS_SERVICES_CONTROL)
 
 
-def service_inventory_items(status: dict) -> list[dict]:
+def service_inventory_items(status: dict[str, Any]) -> list[dict[str, Any]]:
     """Return curated service inventory entries when available."""
     services = nested_get(status, "serviceInventory", "services", default=[]) or []
     return [service for service in services if isinstance(service, dict)]
 
 
-def supports_windows_inventory(status: dict) -> bool:
+def supports_windows_inventory(status: dict[str, Any]) -> bool:
     """Return whether window inventory entities should exist."""
     return has_any_capability(
         status,
@@ -131,7 +133,7 @@ def supports_windows_inventory(status: dict) -> bool:
     ) or status_has_section(status, "windows")
 
 
-def supports_monitor_inventory(status: dict) -> bool:
+def supports_monitor_inventory(status: dict[str, Any]) -> bool:
     """Return whether monitor inventory entities should exist."""
     return has_any_capability(
         status,
@@ -140,7 +142,7 @@ def supports_monitor_inventory(status: dict) -> bool:
     ) or status_has_section(status, "monitors")
 
 
-def supports_process_inventory(status: dict) -> bool:
+def supports_process_inventory(status: dict[str, Any]) -> bool:
     """Return whether process inventory entities should exist."""
     return has_any_capability(
         status,
@@ -149,7 +151,7 @@ def supports_process_inventory(status: dict) -> bool:
     ) or status_has_section(status, "processes")
 
 
-def supports_process_control(status: dict) -> bool:
+def supports_process_control(status: dict[str, Any]) -> bool:
     """Return whether process control services should exist."""
     return has_any_capability(
         status,
@@ -158,7 +160,7 @@ def supports_process_control(status: dict) -> bool:
     )
 
 
-def supports_file_browse(status: dict) -> bool:
+def supports_file_browse(status: dict[str, Any]) -> bool:
     """Return whether file browse services should exist."""
     return has_any_capability(
         status,
@@ -167,7 +169,7 @@ def supports_file_browse(status: dict) -> bool:
     )
 
 
-def supports_file_copy(status: dict) -> bool:
+def supports_file_copy(status: dict[str, Any]) -> bool:
     """Return whether file copy services should exist."""
     return has_any_capability(
         status,
@@ -176,7 +178,7 @@ def supports_file_copy(status: dict) -> bool:
     )
 
 
-def supports_desktop_preview(status: dict) -> bool:
+def supports_desktop_preview(status: dict[str, Any]) -> bool:
     """Return whether desktop preview entities should exist."""
     return has_any_capability(
         status,
@@ -186,7 +188,7 @@ def supports_desktop_preview(status: dict) -> bool:
     )
 
 
-def supports_active_window_preview(status: dict) -> bool:
+def supports_active_window_preview(status: dict[str, Any]) -> bool:
     """Return whether active-window preview entities should exist."""
     return has_any_capability(
         status,
@@ -195,7 +197,7 @@ def supports_active_window_preview(status: dict) -> bool:
     ) and supports_windows_inventory(status)
 
 
-def supported_power_actions(status: dict) -> set[str]:
+def supported_power_actions(status: dict[str, Any]) -> set[str]:
     """Return the supported power action names from status."""
     actions = nested_get(status, "power", "supportedActions", default=[]) or []
     return {str(action) for action in actions}

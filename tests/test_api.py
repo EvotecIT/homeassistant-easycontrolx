@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import ssl
 from unittest.mock import AsyncMock, Mock
 
@@ -386,6 +387,7 @@ async def test_pair_confirm_pending_maps_to_pairing_pending() -> None:
         await client.async_confirm_pairing("session", "123456")
 
     response.json.assert_not_awaited()
+    response.release.assert_called_once_with()
 
 
 @pytest.mark.asyncio
@@ -400,6 +402,8 @@ async def test_pair_confirm_forbidden_maps_to_pairing_error_not_auth_error() -> 
     with pytest.raises(ApiError, match="pairing request was rejected"):
         await client.async_confirm_pairing("session", "123456")
 
+    response.release.assert_called_once_with()
+
 
 @pytest.mark.asyncio
 async def test_pair_confirm_expired_maps_to_pairing_expired() -> None:
@@ -413,6 +417,42 @@ async def test_pair_confirm_expired_maps_to_pairing_expired() -> None:
 
     with pytest.raises(PairingExpired):
         await client.async_confirm_pairing("session", "123456")
+
+    response.release.assert_called_once_with()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("payload", [[], None, "not a status object"])
+async def test_status_rejects_non_object_json(payload) -> None:
+    response = Mock()
+    response.json = AsyncMock(return_value=payload)
+    session = AsyncMock()
+    session.request.return_value = response
+    client = EasyControlXApiClient(session, "https://host.local:5188", "token")
+
+    with pytest.raises(ApiError, match="invalid JSON"):
+        await client.async_get_status()
+
+    response.release.assert_called_once_with()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("preview", [False, True])
+async def test_cancelled_body_read_releases_response(preview: bool) -> None:
+    response = Mock()
+    response.json = AsyncMock(side_effect=asyncio.CancelledError())
+    response.read = AsyncMock(side_effect=asyncio.CancelledError())
+    session = AsyncMock()
+    session.request.return_value = response
+    client = EasyControlXApiClient(session, "https://host.local:5188", "token")
+
+    with pytest.raises(asyncio.CancelledError):
+        if preview:
+            await client.async_get_desktop_preview()
+        else:
+            await client.async_get_status()
+
+    response.release.assert_called_once_with()
 
 
 @pytest.mark.asyncio

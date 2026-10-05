@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .capabilities import (
@@ -26,7 +26,7 @@ from .models import EasyControlXConfigEntry
 @dataclass(frozen=True, kw_only=True)
 class EasyControlXButtonDescription(ButtonEntityDescription):
     available_fn: Callable[[dict[str, Any]], bool]
-    press_fn: Callable[[EasyControlXConfigEntry], Awaitable[None]]
+    press_fn: Callable[[EasyControlXConfigEntry], Awaitable[dict[str, Any]]]
 
 
 BUTTONS: tuple[EasyControlXButtonDescription, ...] = (
@@ -71,7 +71,7 @@ async def async_setup_entry(
     """Set up EasyControlX buttons."""
     status = entry.runtime_data.coordinator.data
     power_actions = supported_power_actions(status)
-    entities: list[EasyControlXButton] = []
+    entities: list[ButtonEntity] = []
 
     for description in BUTTONS:
         if description.key in {"lock", "sleep"}:
