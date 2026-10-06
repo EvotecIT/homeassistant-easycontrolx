@@ -67,13 +67,16 @@ def _zeroconf_info(
     )
 
 
-def test_discovery_with_certificate_hint_defaults_to_https() -> None:
+@pytest.mark.parametrize("hostname,expected_url", [
+    ("studio-pc.local.", "https://studio-pc.local:7443"),
+    ("2001:db8::15", "https://[2001:db8::15]:7443"),
+    ("fe80::15%eth0", "https://[fe80::15%25eth0]:7443"),
+])
+def test_discovery_with_certificate_hint_defaults_to_https(hostname, expected_url) -> None:
     fingerprint = "A1" * 32
-    info = _zeroconf_info(properties={"tlsFingerprint": fingerprint})
+    info = _zeroconf_info(hostname=hostname, properties={"tlsFingerprint": fingerprint})
 
-    assert EasyControlXConfigFlow._async_base_url_from_discovery(info) == (
-        "https://studio-pc.local:7443"
-    )
+    assert EasyControlXConfigFlow._async_base_url_from_discovery(info) == expected_url
     assert EasyControlXConfigFlow._discovery_fingerprint(info.properties) == fingerprint
 
 
