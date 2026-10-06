@@ -4,6 +4,10 @@ import logging
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
+from homeassistant.helpers import config_validation as cv
+
+from .const import DOMAIN
+
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.typing import ConfigType
@@ -11,6 +15,7 @@ if TYPE_CHECKING:
     from .models import EasyControlXConfigEntry
 
 LOGGER = logging.getLogger(__name__)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

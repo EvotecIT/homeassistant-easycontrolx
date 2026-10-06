@@ -240,13 +240,13 @@
       "message": "This EasyControlX host does not expose file copy."
     },
     "power_unsupported": {
-      "message": "This EasyControlX host does not expose the power action '{action}'."
+      "message": "This EasyControlX host does not expose the power action {action}."
     },
     "host_not_found": {
-      "message": "EasyControlX config entry '{entry_id}' was not found."
+      "message": "EasyControlX config entry {entry_id} was not found."
     },
     "host_not_loaded": {
-      "message": "EasyControlX host '{host}' is not currently loaded."
+      "message": "EasyControlX host {host} is not currently loaded."
     }
   }
 }
