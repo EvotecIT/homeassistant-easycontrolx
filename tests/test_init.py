@@ -30,7 +30,10 @@ async def test_actions_exist_without_loaded_host(hass: HomeAssistant) -> None:
     assert error.value.translation_key == "no_hosts"
 
 
-async def test_actions_follow_entry_state_and_survive_unload(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("unload_succeeds", [True, False])
+async def test_actions_follow_entry_state_and_survive_unload(
+    hass: HomeAssistant, unload_succeeds: bool
+) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         version=1,
@@ -61,8 +64,15 @@ async def test_actions_follow_entry_state_and_survive_unload(hass: HomeAssistant
             await hass.services.async_call(DOMAIN, SERVICE_REFRESH, {}, blocking=True)
             refresh.assert_awaited_once()
 
-            unload.return_value = True
-            assert await hass.config_entries.async_unload(entry.entry_id)
+            unload.return_value = unload_succeeds
+            assert await hass.config_entries.async_unload(entry.entry_id) is unload_succeeds
+            if not unload_succeeds:
+                from homeassistant.config_entries import ConfigEntryState
+
+                assert entry.state is ConfigEntryState.FAILED_UNLOAD
+                assert entry.runtime_data is runtime
+                assert hass.services.has_service(DOMAIN, SERVICE_REFRESH)
+                return
             assert hass.services.has_service(DOMAIN, SERVICE_REFRESH)
             # Even retained runtime data must not permit commands after unload.
             entry.runtime_data = runtime
@@ -193,5 +203,36 @@ async def test_offline_setup_retries_without_publishing_runtime(hass: HomeAssist
         assert await hass.config_entries.async_reload(entry.entry_id)
         await hass.async_block_till_done()
         assert entry.state is ConfigEntryState.LOADED
+        assert entry.runtime_data.coordinator.last_update_success
+        assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_platform_setup_failure_recovers_with_fresh_runtime(hass: HomeAssistant) -> None:
+    from homeassistant.config_entries import ConfigEntryState
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        minor_version=1,
+        data={CONF_BASE_URL: "https://host.local:5188", CONF_ACCESS_TOKEN: "token"},
+    )
+    entry.add_to_hass(hass)
+    runtimes = []
+
+    async def fail_forward(config_entry, platforms):
+        runtimes.append(config_entry.runtime_data)
+        raise RuntimeError("platform setup failed")
+
+    with patch(
+        "custom_components.easycontrolx.api.EasyControlXApiClient.async_get_status",
+        new_callable=AsyncMock,
+        return_value={},
+    ):
+        with patch.object(hass.config_entries, "async_forward_entry_setups", fail_forward):
+            assert not await hass.config_entries.async_setup(entry.entry_id)
+        assert entry.state is ConfigEntryState.SETUP_ERROR
+        assert await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+        assert entry.runtime_data is not runtimes[0]
         assert entry.runtime_data.coordinator.last_update_success
         assert await hass.config_entries.async_unload(entry.entry_id)

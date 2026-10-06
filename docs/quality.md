@@ -26,10 +26,10 @@ contract or applicability audit. Exemptions require a rule-permitted explanation
 | docs-high-level-description | Partial | README describes host control; reconcile platform-specific support. |
 | docs-installation-instructions | Partial | HACS/manual instructions exist; install a released artifact. |
 | docs-removal-instructions | Review | Verify entry removal, host trust revocation guidance, and HACS uninstall instructions. |
-| entity-event-setup | Partial | Real HA setup/reload tests retain entity IDs across two reloads and prove old coordinator errors cannot mark replacement entities unavailable. Failed platform forwarding and installed-host qualification remain open. |
+| entity-event-setup | Partial | Real HA setup/reload tests retain entity IDs across two reloads and prove old coordinator errors cannot mark replacement entities unavailable. A platform-forwarding failure retries with a fresh runtime owner. Installed-host qualification remains open. |
 | entity-unique-id | Partial | Device-based identifiers exist; verify host address changes and upgrades preserve them. |
 | has-entity-name | Partial | Shared entity metadata exists; audit primary and companion names. |
-| runtime-data | Partial | Typed entry-owned client/coordinator are published after first refresh. Real HA tests verify offline setup has no runtime or entities and repeated reloads replace the owner without changing entity IDs. Failed-unload/forwarding resource proof remains open. |
+| runtime-data | Partial | Typed entry-owned client/coordinator are published after first refresh. Real HA tests verify offline setup has no runtime or entities and repeated reloads replace the owner without changing entity IDs. Failed platform unloading retains the existing runtime owner; failed forwarding recovers with a fresh owner. Installed-host resource qualification remains open. |
 | test-before-configure | Partial | Host validation, pairing, fingerprint, and authentication tests exist; finish flow coverage. |
 | test-before-setup | Partial | Real HA tests prove offline startup enters SETUP_RETRY without runtime or registry entities; reloading after connection recovery creates a healthy owner. Installed-host proof remains open. |
 | unique-config-entry | Partial | Duplicate/identity checks exist; cover all supported discovery/manual combinations. |
@@ -39,7 +39,7 @@ contract or applicability audit. Exemptions require a rule-permitted explanation
 | Rule | State | Evidence or next acceptance step |
 | --- | --- | --- |
 | action-exceptions | Partial | API maps transport/authentication/status failures; audit every action and response-body failure. |
-| config-entry-unloading | Partial | Platform unloading retains integration-wide actions; real HA tests verify successful unload rejects stale runtime data. Complete repeated reload and failure-resource proof. |
+| config-entry-unloading | Partial | Real HA tests verify successful unload rejects stale runtime data, failed unloading retains its owner in HA FAILED_UNLOAD state, and actions remain registered. Repeated reloads retain entity IDs and detach old coordinators. Installed-host proof remains open. |
 | docs-configuration-parameters | Partial | Configuration guide exists; reconcile polling and preferred-monitor settings. |
 | docs-installation-parameters | Partial | HTTPS, tokens, pairing, and fingerprint approval are documented; validate instructions in HA. |
 | entity-unavailable | Partial | Coordinator and capability availability exist; exercise host, service, and active-window loss/recovery. |
@@ -47,7 +47,7 @@ contract or applicability audit. Exemptions require a rule-permitted explanation
 | log-when-unavailable | Review | Inspect one disconnect/reconnect cycle for useful non-repeating logging. |
 | parallel-updates | Partial | Buttons and switches declare one parallel update per platform and entry; coordinator-state platforms declare zero. A real HA multi-button action reproduces overlapping commands before the change and verifies serialization afterward. Integration-wide actions, polling, and camera image requests are outside this semaphore. |
 | reauthentication-flow | Partial | Reauth and certificate-change checks have tests; verify actual UI and credential replacement. |
-| test-coverage | Gap | 214 tests pass on minimum/current HA. The preceding coverage measurement has statement coverage is 97.4% (1,240/1,273), with 88.6% branch coverage (209/236), including 100% of camera and shared error-translation behavior. Remaining meaningful module and flow paths still need qualification. |
+| test-coverage | Gap | 216 tests pass on minimum/current HA. The preceding measurement records statement coverage of 97.4% (1,240/1,273), with 88.6% branch coverage (209/236), including 100% of camera and shared error-translation behavior. Remaining meaningful module and flow paths still need qualification. |
 
 ## Gold
 
