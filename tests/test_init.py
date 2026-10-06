@@ -110,3 +110,88 @@ async def test_invalid_legacy_url_fails_migration_without_mutating_entry(
     assert await async_migrate_entry(hass, entry) is False
     assert entry.minor_version == 0
     assert entry.data[CONF_BASE_URL] == "not a valid host/path"
+
+async def test_reloads_preserve_entities_and_detach_old_coordinators(hass: HomeAssistant) -> None:
+    from homeassistant.helpers import entity_registry as er
+
+    from custom_components.easycontrolx.exceptions import CannotConnect
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        minor_version=1,
+        data={
+            CONF_BASE_URL: "https://host.local:5188",
+            CONF_ACCESS_TOKEN: "token",
+            CONF_DEVICE_ID: "host-one",
+        },
+    )
+    entry.add_to_hass(hass)
+    status = {
+        "device": {"deviceId": "host-one", "platform": "Windows"},
+        "power": {"supportedActions": ["Lock"]},
+    }
+    with patch(
+        "custom_components.easycontrolx.api.EasyControlXApiClient.async_get_status",
+        new_callable=AsyncMock,
+        return_value=status,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        registry = er.async_get(hass)
+        original_ids = {
+            item.entity_id for item in er.async_entries_for_config_entry(registry, entry.entry_id)
+        }
+        lock_id = registry.async_get_entity_id("button", DOMAIN, "host-one_lock")
+        assert lock_id is not None
+        for _ in range(2):
+            previous = entry.runtime_data
+            assert await hass.config_entries.async_reload(entry.entry_id)
+            await hass.async_block_till_done()
+            assert entry.runtime_data is not previous
+            assert {
+                item.entity_id
+                for item in er.async_entries_for_config_entry(registry, entry.entry_id)
+            } == original_ids
+            assert hass.states.get(lock_id).state != "unavailable"
+            previous.coordinator.async_set_update_error(CannotConnect("old connection"))
+            await hass.async_block_till_done()
+            assert hass.states.get(lock_id).state != "unavailable"
+        assert await hass.config_entries.async_unload(entry.entry_id)
+
+async def test_offline_setup_retries_without_publishing_runtime(hass: HomeAssistant) -> None:
+    from homeassistant.config_entries import ConfigEntryState
+    from homeassistant.helpers import entity_registry as er
+
+    from custom_components.easycontrolx.exceptions import CannotConnect
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        minor_version=1,
+        data={
+            CONF_BASE_URL: "https://host.local:5188",
+            CONF_ACCESS_TOKEN: "token",
+            CONF_DEVICE_ID: "host-one",
+        },
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "custom_components.easycontrolx.api.EasyControlXApiClient.async_get_status",
+        new_callable=AsyncMock,
+        side_effect=CannotConnect("offline"),
+    ) as status:
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        assert entry.state is ConfigEntryState.SETUP_RETRY
+        assert not hasattr(entry, "runtime_data")
+        assert not er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)
+        status.side_effect = None
+        status.return_value = {
+            "device": {"deviceId": "host-one", "platform": "Windows"},
+            "power": {"supportedActions": ["Lock"]},
+        }
+        assert await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+        assert entry.state is ConfigEntryState.LOADED
+        assert entry.runtime_data.coordinator.last_update_success
+        assert await hass.config_entries.async_unload(entry.entry_id)
