@@ -30,6 +30,8 @@ from .entity import EasyControlXEntity
 from .helpers import nested_get, section_attributes
 from .models import EasyControlXConfigEntry
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class EasyControlXSensorDescription(SensorEntityDescription):
@@ -40,7 +42,6 @@ class EasyControlXSensorDescription(SensorEntityDescription):
 SENSORS: tuple[EasyControlXSensorDescription, ...] = (
     EasyControlXSensorDescription(
         key="trusted_controllers_count",
-        icon="mdi:account-check-outline",
         native_unit_of_measurement="controllers",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: nested_get(data, "trust", "trustedControllerCount", default=0),
@@ -55,7 +56,6 @@ SENSORS: tuple[EasyControlXSensorDescription, ...] = (
     ),
     EasyControlXSensorDescription(
         key="pending_pairings",
-        icon="mdi:cellphone-key",
         native_unit_of_measurement="pairings",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -63,35 +63,30 @@ SENSORS: tuple[EasyControlXSensorDescription, ...] = (
     ),
     EasyControlXSensorDescription(
         key="open_windows",
-        icon="mdi:application-outline",
         native_unit_of_measurement="windows",
         value_fn=lambda data: nested_get(data, "windows", "itemCount", default=0),
         attributes_fn=lambda data: section_attributes(data, "windows"),
     ),
     EasyControlXSensorDescription(
         key="monitors",
-        icon="mdi:monitor-multiple",
         native_unit_of_measurement="monitors",
         value_fn=lambda data: nested_get(data, "monitors", "itemCount", default=0),
         attributes_fn=lambda data: section_attributes(data, "monitors"),
     ),
     EasyControlXSensorDescription(
         key="bluetooth_devices",
-        icon="mdi:bluetooth",
         native_unit_of_measurement="devices",
         value_fn=lambda data: nested_get(data, "bluetooth", "itemCount", default=0),
         attributes_fn=lambda data: section_attributes(data, "bluetooth"),
     ),
     EasyControlXSensorDescription(
         key="processes",
-        icon="mdi:application-cog-outline",
         native_unit_of_measurement="processes",
         value_fn=lambda data: nested_get(data, "processes", "itemCount", default=0),
         attributes_fn=lambda data: section_attributes(data, "processes"),
     ),
     EasyControlXSensorDescription(
         key="remote_sessions",
-        icon="mdi:monitor-eye",
         native_unit_of_measurement="sessions",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: nested_get(data, "remoteSessions", "activeSessionCount", default=0),
@@ -107,19 +102,16 @@ SENSORS: tuple[EasyControlXSensorDescription, ...] = (
     ),
     EasyControlXSensorDescription(
         key="audio_summary",
-        icon="mdi:volume-high",
         value_fn=lambda data: nested_get(data, "audio", "summary", default="Unavailable"),
         attributes_fn=lambda data: section_attributes(data, "audio", include_item_count=False),
     ),
     EasyControlXSensorDescription(
         key="media_summary",
-        icon="mdi:play-circle-outline",
         value_fn=lambda data: nested_get(data, "media", "summary", default="Unavailable"),
         attributes_fn=lambda data: section_attributes(data, "media", include_item_count=False),
     ),
     EasyControlXSensorDescription(
         key="cpu_usage",
-        icon="mdi:cpu-64-bit",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: nested_get(data, "system", "cpu", "usagePercent"),
@@ -131,7 +123,6 @@ SENSORS: tuple[EasyControlXSensorDescription, ...] = (
     ),
     EasyControlXSensorDescription(
         key="memory_usage",
-        icon="mdi:memory",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: nested_get(data, "system", "memory", "usagePercent"),
@@ -144,7 +135,6 @@ SENSORS: tuple[EasyControlXSensorDescription, ...] = (
     ),
     EasyControlXSensorDescription(
         key="uptime_seconds",
-        icon="mdi:timer-outline",
         native_unit_of_measurement="s",
         value_fn=lambda data: nested_get(data, "system", "uptimeSeconds"),
         attributes_fn=lambda data: {
@@ -154,21 +144,18 @@ SENSORS: tuple[EasyControlXSensorDescription, ...] = (
     ),
     EasyControlXSensorDescription(
         key="storage_volumes",
-        icon="mdi:harddisk",
         native_unit_of_measurement="volumes",
         value_fn=lambda data: nested_get(data, "storage", "itemCount", default=0),
         attributes_fn=lambda data: section_attributes(data, "storage"),
     ),
     EasyControlXSensorDescription(
         key="network_interfaces",
-        icon="mdi:ethernet",
         native_unit_of_measurement="interfaces",
         value_fn=lambda data: nested_get(data, "network", "itemCount", default=0),
         attributes_fn=lambda data: section_attributes(data, "network"),
     ),
     EasyControlXSensorDescription(
         key="managed_services",
-        icon="mdi:cog-box",
         native_unit_of_measurement="services",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -184,7 +171,6 @@ SENSORS: tuple[EasyControlXSensorDescription, ...] = (
     ),
     EasyControlXSensorDescription(
         key="helper_state",
-        icon="mdi:desktop-classic",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda data: nested_get(

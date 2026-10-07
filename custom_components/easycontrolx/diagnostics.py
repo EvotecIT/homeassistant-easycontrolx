@@ -35,7 +35,7 @@ async def async_get_config_entry_diagnostics(
 
     return {
         "entry": async_redact_data(dict(entry.data), DIAGNOSTICS_REDACT),
-        "options": dict(entry.options),
+        "options": async_redact_data(dict(entry.options), DIAGNOSTICS_REDACT),
         "status": status,
         "capabilities": capabilities,
         "service_inventory_count": len(service_inventory),

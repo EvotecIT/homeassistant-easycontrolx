@@ -56,6 +56,10 @@ certificate fingerprint.
   pin is stored only after the user compares it with the host again.
 - Controller tokens are sent only in the `X-EasyControlX-Token` header and are
   validated before the integration stores or replaces them.
+- API requests do not follow redirects. The configured HTTPS origin and base
+  path must serve the API directly, keeping controller tokens at that destination.
+- The client selects HTTP status and decompression handling per request so
+  borrowed-session defaults cannot change authentication or pairing behavior.
 - Pairing completes only after host approval, verification-code comparison, and
   a successful authenticated request with the issued token.
 

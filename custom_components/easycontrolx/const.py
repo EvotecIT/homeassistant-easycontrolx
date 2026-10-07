@@ -3,7 +3,6 @@ from __future__ import annotations
 from datetime import timedelta
 
 DOMAIN = "easycontrolx"
-DATA_LOADED_ENTRY_IDS = "loaded_entry_ids"
 
 PLATFORMS: tuple[str, ...] = (
     "binary_sensor",
@@ -79,4 +78,19 @@ DIAGNOSTICS_REDACT = {
     "access_token",
     "verificationCode",
     "sessionId",
+    CONF_BASE_URL,
+    CONF_DEVICE_ID,
+    CONF_TLS_FINGERPRINT,
+    CONF_PREFERRED_MONITOR_ID,
+    "deviceId",
+    "name",
+    "instanceName",
+    "displayName",
+    "serviceName",
+    "description",
+    "summary",
+    "title",
+    "windowId",
+    "processName",
+    "monitorName",
 }

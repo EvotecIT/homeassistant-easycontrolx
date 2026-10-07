@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import ssl
 from unittest.mock import AsyncMock, Mock
 
@@ -94,7 +95,7 @@ async def test_status_requires_token() -> None:
 
 @pytest.mark.asyncio
 async def test_get_device_returns_json_payload() -> None:
-    response = Mock()
+    response = Mock(status=200)
     response.raise_for_status.return_value = None
     response.json = AsyncMock(return_value={"deviceId": "abc123"})
 
@@ -110,7 +111,7 @@ async def test_get_device_returns_json_payload() -> None:
 
 @pytest.mark.asyncio
 async def test_requests_preserve_reverse_proxy_base_path() -> None:
-    response = Mock()
+    response = Mock(status=200)
     response.raise_for_status.return_value = None
     response.json = AsyncMock(return_value={"deviceId": "abc123"})
     session = AsyncMock()
@@ -126,7 +127,7 @@ async def test_requests_preserve_reverse_proxy_base_path() -> None:
 
 @pytest.mark.asyncio
 async def test_request_uses_strict_certificate_fingerprint() -> None:
-    response = Mock()
+    response = Mock(status=200)
     response.raise_for_status.return_value = None
     response.json = AsyncMock(return_value={"deviceId": "abc123"})
     session = AsyncMock()
@@ -144,7 +145,7 @@ async def test_request_uses_strict_certificate_fingerprint() -> None:
 
 @pytest.mark.asyncio
 async def test_app_launch_posts_expected_payload() -> None:
-    response = Mock()
+    response = Mock(status=200)
     response.raise_for_status.return_value = None
     response.json = AsyncMock(return_value={"accepted": True})
 
@@ -172,7 +173,7 @@ async def test_app_launch_posts_expected_payload() -> None:
 
 @pytest.mark.asyncio
 async def test_process_list_requests_inventory_endpoint() -> None:
-    response = Mock()
+    response = Mock(status=200)
     response.raise_for_status.return_value = None
     response.json = AsyncMock(return_value={"totalProcessCount": 42})
 
@@ -191,7 +192,7 @@ async def test_process_list_requests_inventory_endpoint() -> None:
 
 @pytest.mark.asyncio
 async def test_service_list_requests_inventory_endpoint() -> None:
-    response = Mock()
+    response = Mock(status=200)
     response.raise_for_status.return_value = None
     response.json = AsyncMock(return_value={"totalServiceCount": 2})
 
@@ -210,7 +211,7 @@ async def test_service_list_requests_inventory_endpoint() -> None:
 
 @pytest.mark.asyncio
 async def test_service_action_posts_expected_payload() -> None:
-    response = Mock()
+    response = Mock(status=200)
     response.raise_for_status.return_value = None
     response.json = AsyncMock(return_value={"accepted": True})
 
@@ -232,7 +233,7 @@ async def test_service_action_posts_expected_payload() -> None:
 
 @pytest.mark.asyncio
 async def test_file_browse_omits_path_when_not_provided() -> None:
-    response = Mock()
+    response = Mock(status=200)
     response.raise_for_status.return_value = None
     response.json = AsyncMock(return_value={"entries": []})
 
@@ -251,7 +252,7 @@ async def test_file_browse_omits_path_when_not_provided() -> None:
 
 @pytest.mark.asyncio
 async def test_file_copy_posts_expected_payload() -> None:
-    response = Mock()
+    response = Mock(status=200)
     response.raise_for_status.return_value = None
     response.json = AsyncMock(return_value={"accepted": True})
 
@@ -335,7 +336,7 @@ async def test_untrusted_certificate_maps_to_explicit_approval_error() -> None:
 
 @pytest.mark.asyncio
 async def test_unauthorized_maps_to_invalid_auth() -> None:
-    response = Mock()
+    response = Mock(status=200)
     response.raise_for_status.side_effect = _client_response_error(401)
 
     session = AsyncMock()
@@ -348,7 +349,7 @@ async def test_unauthorized_maps_to_invalid_auth() -> None:
 
 @pytest.mark.asyncio
 async def test_forbidden_maps_to_invalid_auth() -> None:
-    response = Mock()
+    response = Mock(status=200)
     response.raise_for_status.side_effect = _client_response_error(403)
     session = AsyncMock()
     session.request = AsyncMock(return_value=response)
@@ -360,7 +361,7 @@ async def test_forbidden_maps_to_invalid_auth() -> None:
 
 @pytest.mark.asyncio
 async def test_invalid_json_maps_to_api_error() -> None:
-    response = Mock()
+    response = Mock(status=200)
     response.raise_for_status.return_value = None
     response.json = AsyncMock(side_effect=ValueError("invalid JSON"))
     session = AsyncMock()
@@ -373,7 +374,7 @@ async def test_invalid_json_maps_to_api_error() -> None:
 
 @pytest.mark.asyncio
 async def test_pair_confirm_pending_maps_to_pairing_pending() -> None:
-    response = Mock()
+    response = Mock(status=200)
     response.status = 202
     response.raise_for_status.return_value = None
     response.json = AsyncMock(side_effect=AssertionError("202 body must not be parsed"))
@@ -386,11 +387,12 @@ async def test_pair_confirm_pending_maps_to_pairing_pending() -> None:
         await client.async_confirm_pairing("session", "123456")
 
     response.json.assert_not_awaited()
+    response.release.assert_called_once_with()
 
 
 @pytest.mark.asyncio
 async def test_pair_confirm_forbidden_maps_to_pairing_error_not_auth_error() -> None:
-    response = Mock()
+    response = Mock(status=200)
     response.status = 403
     response.raise_for_status.return_value = None
     session = AsyncMock()
@@ -400,10 +402,12 @@ async def test_pair_confirm_forbidden_maps_to_pairing_error_not_auth_error() -> 
     with pytest.raises(ApiError, match="pairing request was rejected"):
         await client.async_confirm_pairing("session", "123456")
 
+    response.release.assert_called_once_with()
+
 
 @pytest.mark.asyncio
 async def test_pair_confirm_expired_maps_to_pairing_expired() -> None:
-    response = Mock()
+    response = Mock(status=200)
     response.status = 410
     response.raise_for_status.return_value = None
 
@@ -414,10 +418,46 @@ async def test_pair_confirm_expired_maps_to_pairing_expired() -> None:
     with pytest.raises(PairingExpired):
         await client.async_confirm_pairing("session", "123456")
 
+    response.release.assert_called_once_with()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("payload", [[], None, "not a status object"])
+async def test_status_rejects_non_object_json(payload) -> None:
+    response = Mock(status=200)
+    response.json = AsyncMock(return_value=payload)
+    session = AsyncMock()
+    session.request.return_value = response
+    client = EasyControlXApiClient(session, "https://host.local:5188", "token")
+
+    with pytest.raises(ApiError, match="invalid JSON"):
+        await client.async_get_status()
+
+    response.release.assert_called_once_with()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("preview", [False, True])
+async def test_cancelled_body_read_releases_response(preview: bool) -> None:
+    response = Mock(status=200)
+    response.json = AsyncMock(side_effect=asyncio.CancelledError())
+    response.read = AsyncMock(side_effect=asyncio.CancelledError())
+    session = AsyncMock()
+    session.request.return_value = response
+    client = EasyControlXApiClient(session, "https://host.local:5188", "token")
+
+    with pytest.raises(asyncio.CancelledError):
+        if preview:
+            await client.async_get_desktop_preview()
+        else:
+            await client.async_get_status()
+
+    response.release.assert_called_once_with()
+
 
 @pytest.mark.asyncio
 async def test_unexpected_response_maps_to_api_error() -> None:
-    response = Mock()
+    response = Mock(status=200)
     response.raise_for_status.side_effect = _client_response_error(500)
 
     session = AsyncMock()

@@ -5,9 +5,9 @@ from typing import Any
 
 import voluptuous as vol
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -88,7 +88,7 @@ class EasyControlXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Return the options flow."""
         return EasyControlXOptionsFlow(config_entry)
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle manual setup."""
         errors: dict[str, str] = {}
 
@@ -132,7 +132,7 @@ class EasyControlXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-    async def async_step_pair(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_pair(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle host-approved pairing."""
         if self._pending_pairing is None:
             return self.async_abort(reason="pairing_not_started")
@@ -147,7 +147,7 @@ class EasyControlXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_pair_transport_repair(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Repair certificate trust without discarding an approved pairing session."""
         if self._pending_pairing is None:
             return self.async_abort(reason="pairing_not_started")
@@ -174,7 +174,7 @@ class EasyControlXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_pairing_retry(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Retry validation with a token already issued by the host."""
         if not self._issued_access_token or self._pending_pairing is None:
             return self.async_abort(reason="pairing_failed")
@@ -197,7 +197,7 @@ class EasyControlXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._async_finish_paired_setup(self._issued_access_token)
         return self._show_pairing_retry()
 
-    async def async_step_zeroconf(self, discovery_info: ZeroconfServiceInfo) -> FlowResult:
+    async def async_step_zeroconf(self, discovery_info: ZeroconfServiceInfo) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         base_url = self._async_base_url_from_discovery(discovery_info)
         if base_url is None:
@@ -220,7 +220,7 @@ class EasyControlXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_title = title
         return await self.async_step_user()
 
-    async def async_step_reauth(self, entry_data: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: dict[str, Any]) -> ConfigFlowResult:
         """Start a reauth flow."""
         self._reauth_entry = self._get_reauth_entry()
         return await self.async_step_reauth_confirm()
@@ -228,7 +228,7 @@ class EasyControlXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_reauth_confirm(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauthentication."""
         if self._reauth_entry is None:
             self._reauth_entry = self._get_reauth_entry()
@@ -317,7 +317,7 @@ class EasyControlXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Allow the user to reconfigure connection settings."""
         entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
@@ -383,7 +383,7 @@ class EasyControlXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         *,
         base_url: str,
         tls_fingerprint: str | None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle user-provided connection information."""
         access_token = normalize_optional_string(user_input.get(CONF_ACCESS_TOKEN))
         controller_name = (
@@ -441,7 +441,7 @@ class EasyControlXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         base_url: str,
         access_token: str,
         tls_fingerprint: str | None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Finish entry creation or update."""
         data = {
             CONF_BASE_URL: base_url,
@@ -455,13 +455,6 @@ class EasyControlXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_mismatch()
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(),
-                data_updates=data,
-            )
-
-        if self.source == config_entries.SOURCE_RECONFIGURE:
-            self._abort_if_unique_id_mismatch()
-            return self.async_update_reload_and_abort(
-                self._get_reconfigure_entry(),
                 data_updates=data,
             )
 
@@ -554,7 +547,7 @@ class EasyControlXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             "verification_code": pending.verification_code,
         }
 
-    async def _async_confirm_pending_pairing(self) -> FlowResult:
+    async def _async_confirm_pending_pairing(self) -> ConfigFlowResult:
         """Confirm a code already compared by the user and retain repair state."""
         pending = self._pending_pairing
         if pending is None:
@@ -592,7 +585,7 @@ class EasyControlXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._async_finish_paired_setup(access_token)
         return self._show_pair(error="pairing_pending")
 
-    def _show_pair(self, error: str | None = None) -> FlowResult:
+    def _show_pair(self, error: str | None = None) -> ConfigFlowResult:
         """Show the pairing-code confirmation form."""
         return self.async_show_form(
             step_id="pair",
@@ -601,7 +594,7 @@ class EasyControlXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders=self._pairing_placeholders(),
         )
 
-    async def _async_finish_paired_setup(self, access_token: str) -> FlowResult:
+    async def _async_finish_paired_setup(self, access_token: str) -> ConfigFlowResult:
         """Validate the issued token before persisting the paired entry."""
         pending = self._pending_pairing
         if pending is None:
@@ -642,7 +635,7 @@ class EasyControlXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self,
         error: str | None = None,
         fingerprint_error: str | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         fingerprint = (
             self._pending_pairing.tls_fingerprint if self._pending_pairing else ""
         ) or ""
@@ -666,7 +659,7 @@ class EasyControlXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _show_pair_transport_repair(
         self,
         fingerprint_error: str | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Show certificate repair while preserving the pending pairing session."""
         fingerprint = (
             self._pending_pairing.tls_fingerprint if self._pending_pairing else ""
@@ -695,7 +688,7 @@ class EasyControlXOptionsFlow(config_entries.OptionsFlow):
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         self._config_entry = config_entry
 
-    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Manage optional runtime settings."""
         if user_input is not None:
             preferred_monitor_id = normalize_optional_string(

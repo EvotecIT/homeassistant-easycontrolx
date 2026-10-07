@@ -8,8 +8,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .capabilities import supports_active_window_preview, supports_desktop_preview
 from .const import CONF_PREFERRED_MONITOR_ID
 from .entity import EasyControlXEntity
+from .ha_errors import translate_api_errors
 from .helpers import nested_get
 from .models import EasyControlXConfigEntry
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -54,12 +57,13 @@ class EasyControlXDesktopPreviewCamera(EasyControlXCamera):
         height: int | None = None,
     ) -> bytes | None:
         """Return the desktop preview image."""
-        monitor_id = self._config_entry.options.get(CONF_PREFERRED_MONITOR_ID) or None
-        return await self._config_entry.runtime_data.client.async_get_desktop_preview(
-            monitor_id=monitor_id,
-            max_width=width or 1280,
-            max_height=height or 720,
-        )
+        with translate_api_errors():
+            monitor_id = self._config_entry.options.get(CONF_PREFERRED_MONITOR_ID) or None
+            return await self._config_entry.runtime_data.client.async_get_desktop_preview(
+                monitor_id=monitor_id,
+                max_width=width or 1280,
+                max_height=height or 720,
+            )
 
     @property
     def extra_state_attributes(self) -> dict[str, str | None] | None:
@@ -94,15 +98,16 @@ class EasyControlXActiveWindowPreviewCamera(EasyControlXCamera):
         height: int | None = None,
     ) -> bytes | None:
         """Return the active window preview image."""
-        window_id = nested_get(self.coordinator.data, "windows", "activeWindow", "windowId")
-        if not window_id:
-            return None
+        with translate_api_errors():
+            window_id = nested_get(self.coordinator.data, "windows", "activeWindow", "windowId")
+            if not window_id:
+                return None
 
-        return await self._config_entry.runtime_data.client.async_get_window_preview(
-            window_id,
-            max_width=width or 960,
-            max_height=height or 540,
-        )
+            return await self._config_entry.runtime_data.client.async_get_window_preview(
+                window_id,
+                max_width=width or 960,
+                max_height=height or 540,
+            )
 
     @property
     def extra_state_attributes(self) -> dict[str, str | None] | None:

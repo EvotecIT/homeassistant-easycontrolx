@@ -1,0 +1,71 @@
+{
+  "entity": {
+    "sensor": {
+      "trusted_controllers_count": {
+        "default": "mdi:account-check-outline"
+      },
+      "pending_pairings": {
+        "default": "mdi:cellphone-key"
+      },
+      "open_windows": {
+        "default": "mdi:application-outline"
+      },
+      "monitors": {
+        "default": "mdi:monitor-multiple"
+      },
+      "bluetooth_devices": {
+        "default": "mdi:bluetooth"
+      },
+      "processes": {
+        "default": "mdi:application-cog-outline"
+      },
+      "remote_sessions": {
+        "default": "mdi:monitor-eye"
+      },
+      "audio_summary": {
+        "default": "mdi:volume-high"
+      },
+      "media_summary": {
+        "default": "mdi:play-circle-outline"
+      },
+      "cpu_usage": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "memory_usage": {
+        "default": "mdi:memory"
+      },
+      "uptime_seconds": {
+        "default": "mdi:timer-outline"
+      },
+      "storage_volumes": {
+        "default": "mdi:harddisk"
+      },
+      "network_interfaces": {
+        "default": "mdi:ethernet"
+      },
+      "managed_services": {
+        "default": "mdi:cog-box"
+      },
+      "helper_state": {
+        "default": "mdi:desktop-classic"
+      }
+    },
+    "button": {
+      "lock": {
+        "default": "mdi:lock"
+      },
+      "sleep": {
+        "default": "mdi:sleep"
+      },
+      "play_pause": {
+        "default": "mdi:play-pause"
+      },
+      "toggle_mute": {
+        "default": "mdi:volume-high"
+      },
+      "service_restart": {
+        "default": "mdi:restart"
+      }
+    }
+  }
+}

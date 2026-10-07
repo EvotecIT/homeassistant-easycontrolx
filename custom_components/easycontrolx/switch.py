@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .capabilities import (
@@ -12,8 +12,11 @@ from .capabilities import (
     supports_service_control,
     supports_service_inventory,
 )
+from .ha_errors import translate_api_errors
 from .managed_services import EasyControlXManagedServiceEntity
 from .models import EasyControlXConfigEntry
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -82,5 +85,8 @@ class EasyControlXManagedServiceSwitch(EasyControlXManagedServiceEntity, SwitchE
 
     async def _async_run_action(self, action: str) -> None:
         """Execute a curated service action and refresh host data."""
-        await self._config_entry.runtime_data.client.async_post_service(action, self.service_name)
-        await self.coordinator.async_request_refresh()
+        with translate_api_errors():
+            await self._config_entry.runtime_data.client.async_post_service(
+                action, self.service_name
+            )
+            await self.coordinator.async_request_refresh()

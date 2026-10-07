@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .capabilities import (
@@ -18,21 +18,23 @@ from .capabilities import (
     supports_service_inventory,
 )
 from .entity import EasyControlXEntity
+from .ha_errors import translate_api_errors
 from .helpers import nested_get
 from .managed_services import EasyControlXManagedServiceEntity
 from .models import EasyControlXConfigEntry
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
 class EasyControlXButtonDescription(ButtonEntityDescription):
     available_fn: Callable[[dict[str, Any]], bool]
-    press_fn: Callable[[EasyControlXConfigEntry], Awaitable[None]]
+    press_fn: Callable[[EasyControlXConfigEntry], Awaitable[dict[str, Any]]]
 
 
 BUTTONS: tuple[EasyControlXButtonDescription, ...] = (
     EasyControlXButtonDescription(
         key="lock",
-        icon="mdi:lock",
         available_fn=lambda data: "Lock"
         in (nested_get(data, "power", "supportedActions", default=[]) or []),
         press_fn=lambda entry: entry.runtime_data.client.async_post_power(
@@ -41,7 +43,6 @@ BUTTONS: tuple[EasyControlXButtonDescription, ...] = (
     ),
     EasyControlXButtonDescription(
         key="sleep",
-        icon="mdi:sleep",
         available_fn=lambda data: "Sleep"
         in (nested_get(data, "power", "supportedActions", default=[]) or []),
         press_fn=lambda entry: entry.runtime_data.client.async_post_power(
@@ -50,13 +51,11 @@ BUTTONS: tuple[EasyControlXButtonDescription, ...] = (
     ),
     EasyControlXButtonDescription(
         key="play_pause",
-        icon="mdi:play-pause",
         available_fn=lambda data: bool(nested_get(data, "media", "isAvailable", default=False)),
         press_fn=lambda entry: entry.runtime_data.client.async_post_media("PlayPause"),
     ),
     EasyControlXButtonDescription(
         key="toggle_mute",
-        icon="mdi:volume-high",
         available_fn=lambda data: bool(nested_get(data, "audio", "isAvailable", default=False)),
         press_fn=lambda entry: entry.runtime_data.client.async_post_audio("ToggleMute"),
     ),
@@ -71,7 +70,7 @@ async def async_setup_entry(
     """Set up EasyControlX buttons."""
     status = entry.runtime_data.coordinator.data
     power_actions = supported_power_actions(status)
-    entities: list[EasyControlXButton] = []
+    entities: list[ButtonEntity] = []
 
     for description in BUTTONS:
         if description.key in {"lock", "sleep"}:
@@ -118,15 +117,16 @@ class EasyControlXButton(EasyControlXEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Trigger the button action."""
-        await self.entity_description.press_fn(self._config_entry)
-        await self.coordinator.async_request_refresh()
+        with translate_api_errors():
+            await self.entity_description.press_fn(self._config_entry)
+            await self.coordinator.async_request_refresh()
 
 
 class EasyControlXManagedServiceRestartButton(EasyControlXManagedServiceEntity, ButtonEntity):
     """Represent a restart button for a curated managed service."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon = "mdi:restart"
+    _attr_translation_key = "service_restart"
 
     def __init__(
         self,
@@ -153,8 +153,9 @@ class EasyControlXManagedServiceRestartButton(EasyControlXManagedServiceEntity, 
 
     async def async_press(self) -> None:
         """Restart the managed service."""
-        await self._config_entry.runtime_data.client.async_post_service(
-            "Restart",
-            self.service_name,
-        )
-        await self.coordinator.async_request_refresh()
+        with translate_api_errors():
+            await self._config_entry.runtime_data.client.async_post_service(
+                "Restart",
+                self.service_name,
+            )
+            await self.coordinator.async_request_refresh()

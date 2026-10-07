@@ -80,3 +80,22 @@ def test_service_switch_is_unavailable_when_service_is_missing() -> None:
 
     assert switch.available is False
     assert switch.is_on is None
+
+
+@pytest.mark.parametrize("method", ["async_turn_on", "async_turn_off"])
+async def test_service_switch_translates_host_failure(method):
+    from homeassistant.exceptions import HomeAssistantError
+
+    from custom_components.easycontrolx.exceptions import CannotConnect
+
+    entry, coordinator = _make_entry()
+    failure = CannotConnect("private-host-detail")
+    entry.runtime_data.client.async_post_service.side_effect = failure
+    switch = EasyControlXManagedServiceSwitch(
+        entry, coordinator.data["serviceInventory"]["services"][0],
+    )
+    with pytest.raises(HomeAssistantError) as error:
+        await getattr(switch, method)()
+    assert error.value.translation_key == "host_unavailable"
+    assert error.value.__cause__ is failure
+    coordinator.async_request_refresh.assert_not_awaited()

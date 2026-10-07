@@ -23,6 +23,8 @@ from .helpers import nested_get
 from .managed_services import EasyControlXManagedServiceEntity
 from .models import EasyControlXConfigEntry
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class EasyControlXBinarySensorDescription(BinarySensorEntityDescription):
@@ -92,7 +94,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up EasyControlX binary sensors."""
     status = entry.runtime_data.coordinator.data
-    entities: list[EasyControlXBinarySensor] = []
+    entities: list[BinarySensorEntity] = []
 
     for description in BINARY_SENSORS:
         if (
