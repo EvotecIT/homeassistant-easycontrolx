@@ -29,8 +29,15 @@ certificate fingerprint solely because it appeared in a discovery message.
 
 Use **Configure** for:
 
-- polling interval in seconds;
-- preferred monitor ID for desktop preview.
+| Option | Default and effect |
+| --- | --- |
+| Polling interval | 30 seconds; accepts 10–300 seconds. Controls regular host-status refreshes. |
+| Preferred monitor ID | Empty by default. When set, sends that host-provided monitor ID with desktop-preview requests. |
+
+Saving options reloads the integration. Leave the monitor ID empty to omit the
+monitor selection from the request. This setting does not select the active
+window or change the polling interval. Use an ID reported by the connected host;
+a monitor name or an ID copied from another computer may not identify a display.
 
 Use **Reconfigure** to change the base URL or approved fingerprint. Verify a
 replacement certificate on the host before saving it.
@@ -38,6 +45,37 @@ replacement certificate on the host before saving it.
 If a token expires or is revoked, the reauthentication flow accepts a fresh token
 or starts a new host-approved pairing. Never place tokens in automation YAML,
 screenshots, logs, or issue attachments.
+
+## How data updates
+
+The integration polls the host's authenticated `/api/v1/status` endpoint. It does
+not subscribe to a continuous stream of host-status updates. With the default
+options, regular refreshes are scheduled every 30 seconds. Network delays and
+failed requests can make displayed state older than the configured interval.
+
+When the host advertises service inventory or supplies a services section, a
+refresh also requests `/api/v1/services`. An ordinary inventory request failure
+does not discard a successful main status response. Authentication and
+certificate failures require recovery rather than silently accepting partial
+data. Inventory availability does not grant permission to control services.
+
+Successful state-changing buttons, switches and integration actions request a
+coordinator refresh. These additional refreshes mean the polling interval is
+not a limit on the number of HTTP requests. A shorter interval increases status
+and, where applicable, inventory traffic.
+
+Camera previews are fetched separately when Home Assistant requests an image;
+they are not downloaded as part of each status poll. Dashboard cards and other
+camera consumers can therefore add image traffic independently of the polling
+option. The desktop preview uses the preferred monitor ID when configured. The
+active-window preview uses the latest polled window identity, so a change of
+active window may not be reflected immediately. That camera is disabled by
+default and becomes unavailable when the current status has no active window.
+
+If the main status request fails, coordinator-backed entities become
+unavailable until a successful update. An authentication or certificate failure
+can require the reauthentication or fingerprint steps above. Use these recovery
+paths before deleting and recreating an entry.
 
 ## Upgrading from version 0.1
 

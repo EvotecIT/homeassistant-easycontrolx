@@ -40,7 +40,7 @@ contract or applicability audit. Exemptions require a rule-permitted explanation
 | --- | --- | --- |
 | action-exceptions | Partial | API maps transport/authentication/status failures; audit every action and response-body failure. |
 | config-entry-unloading | Partial | Real HA tests verify successful unload rejects stale runtime data, failed unloading retains its owner in HA FAILED_UNLOAD state, and actions remain registered. Repeated reloads retain entity IDs and detach old coordinators. Installed-host proof remains open. |
-| docs-configuration-parameters | Partial | Configuration guide exists; reconcile polling and preferred-monitor settings. |
+| docs-configuration-parameters | Source verified | The configuration guide documents the 30-second polling default, 10–300-second range, empty preferred-monitor default, request selection and reload behavior. Checked against constants, options flow, entry update listener and camera implementation. Installed UI qualification remains open. |
 | docs-installation-parameters | Partial | HTTPS, tokens, pairing, and fingerprint approval are documented; validate instructions in HA. |
 | entity-unavailable | Partial | Coordinator and capability availability exist; exercise host, service, and active-window loss/recovery. |
 | integration-owner | Partial | Maintainers and issue tracker are declared; verify support and security-reporting paths. |
@@ -57,7 +57,7 @@ contract or applicability audit. Exemptions require a rule-permitted explanation
 | diagnostics | Partial | Redaction/nonmutation tests pass for current host/service contracts; inspect downloaded artifacts. |
 | discovery-update-info | Partial | Discovery trust/identity tests exist; verify safe address changes and recovery. |
 | discovery | Partial | Zeroconf flow exists; verify advertised host platforms and unrelated-device rejection. |
-| docs-data-update | Review | Explain polling, optional service inventory, preview requests, and state delays. |
+| docs-data-update | Source verified | Guide explains status polling, conditional service-inventory enrichment and its failure policy, action-triggered refreshes, separately requested preview images, polled active-window identity and recovery. Checked against coordinator, capability predicates, actions and camera owners. Real-host request budgets and timing remain unmeasured. |
 | docs-examples | Partial | Automation guide exists; execute examples against supported test-host capabilities. |
 | docs-known-limitations | Partial | Architecture and entity model describe capability boundaries; reconcile preview/platform limitations. |
 | docs-supported-devices | Partial | Host contract defines platform boundary; publish a tested host-version matrix. |
