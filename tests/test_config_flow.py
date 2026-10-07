@@ -731,3 +731,19 @@ async def test_discovery_without_advertised_identity_uses_verified_device(hass):
     assert result["data"][CONF_DEVICE_ID] == DEVICE["deviceId"]
     assert result["result"].unique_id == DEVICE["deviceId"]
     client.async_get_status.assert_awaited_once()
+
+
+@pytest.mark.parametrize("hostname,port", [("", 7443), ("studio-pc.local.", 0)])
+async def test_incomplete_discovery_endpoint_does_not_start_pairing(hass, hostname, port):
+    discovery = _zeroconf_info(properties={"tlsFingerprint": "A1" * 32})
+    discovery.hostname = hostname
+    discovery.port = port
+    with patch("custom_components.easycontrolx.config_flow._async_build_client",
+               new_callable=AsyncMock) as build:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery,
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_device"
+    build.assert_not_awaited()
+    assert hass.config_entries.async_entries(DOMAIN) == []

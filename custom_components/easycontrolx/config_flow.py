@@ -458,13 +458,6 @@ class EasyControlXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data_updates=data,
             )
 
-        if self.source == config_entries.SOURCE_RECONFIGURE:
-            self._abort_if_unique_id_mismatch()
-            return self.async_update_reload_and_abort(
-                self._get_reconfigure_entry(),
-                data_updates=data,
-            )
-
         self._abort_if_unique_id_configured()
         return self.async_create_entry(
             title=title,

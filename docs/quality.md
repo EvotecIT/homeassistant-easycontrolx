@@ -17,7 +17,7 @@ contract or applicability audit. Exemptions require a rule-permitted explanation
 | appropriate-polling | Partial | Coordinator interval and options exist; measure normal/offline request counts. |
 | brands | Review | Verify installed HA/HACS branding assets. |
 | common-modules | Partial | API, coordinator, entity, capability, and managed-service owners exist; inspect remaining duplication. |
-| config-flow-test-coverage | Gap | Measured flow statement coverage is 96.9% (313/323); the statement/branch combined report is 95% after 218 tests. IPv6 and scoped link-local discovery URLs have explicit contract checks. Tests cover post-approval token rejection, changed host identity, certificate repair without losing the pairing session, discovery trust checks, and options persistence. Defensive and remaining flow paths still need qualification. |
+| config-flow-test-coverage | Gap | The 221-test minimum-HA run covers 313/320 flow statements (97.8%). Discovery tests reject incomplete host/port advertisements before creating a client or pairing. The unused setup-helper reconfiguration branch was removed; public reconfiguration retains its own tested identity validation and update path. IPv6, post-approval token rejection, changed host identity, certificate repair, discovery trust and options persistence have contract checks. Seven defensive statements remain uncovered; full flow qualification is incomplete. |
 | config-flow | Partial | UI, discovery, pairing, and token flows have tests; verify actual installed UI. |
 | dependency-transparency | Partial | Host contract and HTTPS boundary are documented; inspect shipped requirements and network behaviour. |
 | docs-actions | Partial | Automation guide exists; validate each supported action and its parameters. |
@@ -47,7 +47,7 @@ contract or applicability audit. Exemptions require a rule-permitted explanation
 | log-when-unavailable | Review | Inspect one disconnect/reconnect cycle for useful non-repeating logging. |
 | parallel-updates | Partial | Buttons and switches declare one parallel update per platform and entry; coordinator-state platforms declare zero. A real HA multi-button action reproduces overlapping commands before the change and verifies serialization afterward. Integration-wide actions, polling, and camera image requests are outside this semaphore. |
 | reauthentication-flow | Partial | Reauth and certificate-change checks have tests; verify actual UI and credential replacement. |
-| test-coverage | Gap | 218 tests pass on minimum/current HA. The preceding measurement records statement coverage of 97.4% (1,240/1,273), with 88.6% branch coverage (209/236), including 100% of camera and shared error-translation behavior. Remaining meaningful module and flow paths still need qualification. |
+| test-coverage | Gap | 221 tests pass on minimum/current HA. The preceding integration-wide measurement records statement coverage of 97.4% (1,240/1,273), with 88.6% branch coverage (209/236), including 100% of camera and shared error-translation behavior. The newer flow-only measurement does not replace that integration-wide baseline. Remaining meaningful module and flow paths still need qualification. |
 
 ## Gold
 
