@@ -5,6 +5,29 @@
 Use the entities your host actually exposes. A read-only inventory does not
 grant permission to control the listed apps, processes, files, or services.
 
+## Triggers and conditions
+
+EasyControlX provides entities and actions; it does not register custom automation
+triggers or conditions. Use Home Assistant's standard state and numeric-state
+triggers and conditions with the entities available on your host.
+
+In the automation editor, add a state trigger under **When** and select an
+EasyControlX entity. For example, a Helper ready binary sensor can trigger a
+notification when it changes from `on` to `off`. That sensor is available only
+when the host reports helper or interactive-session information. Its state is
+updated by polling, so detection follows the configured polling interval.
+
+Under **And if**, add a state condition to require an entity to be `on`, or a
+numeric-state condition to compare a supported count sensor with a threshold.
+A condition checks the current state when the automation runs; it does not start
+the automation. An explicit `on` condition does not match `unknown` or
+`unavailable`. Select your actual entity from the editor rather than assuming a
+generated entity ID.
+
+Entity state describes the latest reported host state. It does not grant host
+permissions or guarantee that a later action will succeed; actions still validate
+capabilities, authorization, and connectivity.
+
 ## Start with an entity action
 
 For a supported host, a Lock button can be called with Home Assistant's standard

@@ -21,8 +21,8 @@ contract or applicability audit. Exemptions require a rule-permitted explanation
 | config-flow | Partial | UI, discovery, pairing, and token flows have tests; verify actual installed UI. |
 | dependency-transparency | Partial | Host contract and HTTPS boundary are documented; inspect shipped requirements and network behaviour. |
 | docs-actions | Partial | Automation guide exists; validate each supported action and its parameters. |
-| docs-triggers | Review | Audit applicability and document supported automation usage. |
-| docs-conditions | Review | Audit applicability and document supported automation usage. |
+| docs-triggers | Exempt | No custom trigger platform or registration is provided. The [HA rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/docs-triggers/) explicitly exempts integrations without triggers. The automation guide explains standard HA entity-state triggers and polling limits. |
+| docs-conditions | Exempt | No custom condition platform or registration is provided. The [HA rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/docs-conditions/) explicitly exempts integrations without conditions. The automation guide explains standard state/numeric-state conditions and unavailable-state behavior. |
 | docs-high-level-description | Partial | README describes host control; reconcile platform-specific support. |
 | docs-installation-instructions | Partial | HACS/manual instructions exist; install a released artifact. |
 | docs-removal-instructions | Review | Verify entry removal, host trust revocation guidance, and HACS uninstall instructions. |
