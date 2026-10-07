@@ -35,7 +35,6 @@ class EasyControlXButtonDescription(ButtonEntityDescription):
 BUTTONS: tuple[EasyControlXButtonDescription, ...] = (
     EasyControlXButtonDescription(
         key="lock",
-        icon="mdi:lock",
         available_fn=lambda data: "Lock"
         in (nested_get(data, "power", "supportedActions", default=[]) or []),
         press_fn=lambda entry: entry.runtime_data.client.async_post_power(
@@ -44,7 +43,6 @@ BUTTONS: tuple[EasyControlXButtonDescription, ...] = (
     ),
     EasyControlXButtonDescription(
         key="sleep",
-        icon="mdi:sleep",
         available_fn=lambda data: "Sleep"
         in (nested_get(data, "power", "supportedActions", default=[]) or []),
         press_fn=lambda entry: entry.runtime_data.client.async_post_power(
@@ -53,13 +51,11 @@ BUTTONS: tuple[EasyControlXButtonDescription, ...] = (
     ),
     EasyControlXButtonDescription(
         key="play_pause",
-        icon="mdi:play-pause",
         available_fn=lambda data: bool(nested_get(data, "media", "isAvailable", default=False)),
         press_fn=lambda entry: entry.runtime_data.client.async_post_media("PlayPause"),
     ),
     EasyControlXButtonDescription(
         key="toggle_mute",
-        icon="mdi:volume-high",
         available_fn=lambda data: bool(nested_get(data, "audio", "isAvailable", default=False)),
         press_fn=lambda entry: entry.runtime_data.client.async_post_audio("ToggleMute"),
     ),
@@ -130,7 +126,7 @@ class EasyControlXManagedServiceRestartButton(EasyControlXManagedServiceEntity, 
     """Represent a restart button for a curated managed service."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon = "mdi:restart"
+    _attr_translation_key = "service_restart"
 
     def __init__(
         self,

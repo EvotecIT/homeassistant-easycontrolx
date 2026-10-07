@@ -70,7 +70,7 @@ contract or applicability audit. Exemptions require a rule-permitted explanation
 | entity-disabled-by-default | Partial | Active-window preview is disabled by default; audit other private/noisy entities. |
 | entity-translations | Partial | Entities use translation keys; verify complete supported-language names and fallback. |
 | exception-translations | Partial | Domain actions, buttons, switches, previews, and refreshes translate client failures through shared HA exception keys. Tests verify English fallback, preserved causes, private-response exclusion from displayed messages, and authentication recovery. Service-validation errors also use keys and named placeholders; all unsupported-capability paths reject before any host call. Rendered frontend and installed-artifact proof remain open. |
-| icon-translations | Review | Audit custom versus device-class icons and add applicable icon translations. |
+| icon-translations | Partial | Custom sensor/button icons use icons.json and entity translation keys; HA loader coverage passes on minimum and current HA. Device-class binary-sensor defaults remain in use. Installed frontend appearance still needs verification. |
 | reconfiguration-flow | Partial | Reconfigure validates destination/identity/fingerprint; verify installed UI and preserved bindings. |
 | repair-issues | Partial | Authentication and changed-certificate flows exist; audit other failures requiring intervention. |
 | stale-devices | Review | Verify removal behaviour and applicability to host/service registry entries. |
