@@ -22,4 +22,3 @@ async def test_custom_icons_load_for_frontend(hass):
     )
     assert icons["button"][restart.translation_key]["default"] == "mdi:restart"
     assert icons["sensor"]["cpu_usage"]["default"] == "mdi:cpu-64-bit"
-
