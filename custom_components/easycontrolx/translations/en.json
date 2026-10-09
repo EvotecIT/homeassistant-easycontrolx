@@ -69,6 +69,7 @@
       "pairing_failed": "The host rejected the issued pairing credential. Start pairing again.",
       "pairing_not_started": "Pairing has not been started.",
       "reauth_successful": "EasyControlX was reauthenticated successfully.",
+      "reconfigure_successful": "The EasyControlX connection was updated successfully.",
       "unique_id_mismatch": "The host identity does not match the device being configured.",
       "unsupported_device": "The discovered device could not be used."
     }
