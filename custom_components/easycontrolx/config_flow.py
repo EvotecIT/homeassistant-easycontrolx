@@ -284,7 +284,7 @@ class EasyControlXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_ACCESS_TOKEN: access_token,
                         CONF_TLS_FINGERPRINT: tls_fingerprint or "",
                     }
-                    return self.async_update_reload_and_abort(
+                    return self._async_update_connection_and_abort(
                         self._get_reauth_entry(),
                         data_updates=updates,
                     )
@@ -355,7 +355,7 @@ class EasyControlXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except ApiError:
                 errors["base"] = "unknown"
             else:
-                return self.async_update_reload_and_abort(
+                return self._async_update_connection_and_abort(
                     entry,
                     data_updates={
                         CONF_BASE_URL: base_url,
@@ -433,6 +433,28 @@ class EasyControlXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return await self.async_step_pair()
 
+    @callback
+    def _async_update_connection_and_abort(
+        self,
+        entry: config_entries.ConfigEntry,
+        *,
+        data_updates: dict[str, Any],
+    ) -> ConfigFlowResult:
+        """Persist validated connection data and reload through one owner."""
+        changed = self.hass.config_entries.async_update_entry(
+            entry, data={**entry.data, **data_updates}
+        )
+        # The loaded entry's listener owns changed-data reloads. Unchanged
+        # repairs and entries without a listener still need one explicit reload.
+        if not changed or not entry.update_listeners:
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
+        reason = (
+            "reconfigure_successful"
+            if self.source == config_entries.SOURCE_RECONFIGURE
+            else "reauth_successful"
+        )
+        return self.async_abort(reason=reason)
+
     async def _async_finish_setup(
         self,
         *,
@@ -453,7 +475,7 @@ class EasyControlXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(device_id)
         if self.source == config_entries.SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch()
-            return self.async_update_reload_and_abort(
+            return self._async_update_connection_and_abort(
                 self._get_reauth_entry(),
                 data_updates=data,
             )
