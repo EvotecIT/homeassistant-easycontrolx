@@ -1,5 +1,6 @@
 """Credential repair reloads through one owner without replacing the entry."""
 
+import asyncio
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -9,6 +10,7 @@ from homeassistant.components.config.config_entries import config_entry_update
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.translation import async_get_translations
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -164,3 +166,63 @@ async def test_registered_listener_preserves_setting_reload(hass, monkeypatch, f
     await hass.async_block_till_done()
 
     reload.assert_awaited_once_with(entry.entry_id)
+
+
+@pytest.mark.parametrize("first_refresh_fails", [False, True])
+async def test_options_during_setup_use_new_interval(
+    hass, monkeypatch, first_refresh_fails
+):
+    """Options reload after the setup lock without losing a failed refresh update."""
+    entry = await _entry(hass, monkeypatch, ConfigEntryState.NOT_LOADED)
+    entered, release = asyncio.Event(), asyncio.Event()
+    setup_intervals, unload_states = [], []
+
+    async def first_refresh():
+        entered.set()
+        await release.wait()
+        if first_refresh_fails:
+            raise ConfigEntryNotReady("Controller is temporarily unavailable")
+
+    def coordinator_factory(_hass, _client, *, update_interval):
+        setup_intervals.append(update_interval.total_seconds())
+        return Mock(async_config_entry_first_refresh=AsyncMock(
+            side_effect=first_refresh if len(setup_intervals) == 1 else None
+        ))
+
+    monkeypatch.setattr("custom_components.easycontrolx.api.EasyControlXApiClient", Mock())
+    monkeypatch.setattr(
+        "custom_components.easycontrolx.coordinator.EasyControlXCoordinator",
+        coordinator_factory,
+    )
+    monkeypatch.setattr(hass.config_entries, "async_forward_entry_setups", AsyncMock())
+    monkeypatch.setattr(
+        hass.config_entries, "async_unload_platforms", AsyncMock(return_value=True)
+    )
+    reload = AsyncMock(wraps=hass.config_entries.async_reload)
+    monkeypatch.setattr(hass.config_entries, "async_reload", reload)
+    original_unload = hass.config_entries.async_unload
+
+    async def unload(*args, **kwargs):
+        unload_states.append(entry.state)
+        return await original_unload(*args, **kwargs)
+
+    monkeypatch.setattr(hass.config_entries, "async_unload", unload)
+    task = hass.async_create_task(hass.config_entries.async_setup(entry.entry_id))
+    await asyncio.wait_for(entered.wait(), timeout=10)
+    try:
+        result = await hass.config_entries.options.async_init(
+            entry.entry_id, data={"scan_interval": 60}
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert entry.state is ConfigEntryState.SETUP_IN_PROGRESS
+    finally:
+        release.set()
+    await task
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+    assert setup_intervals == [45, 60]
+    assert unload_states == [
+        ConfigEntryState.SETUP_RETRY if first_refresh_fails else ConfigEntryState.LOADED
+    ]
+    reload.assert_awaited_once_with(entry.entry_id)
+    assert len(entry.update_listeners) == 1

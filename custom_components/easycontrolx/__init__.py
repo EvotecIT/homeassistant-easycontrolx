@@ -57,9 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EasyControlXConfigEntry)
         client,
         update_interval=timedelta(seconds=interval_seconds),
     )
-    await coordinator.async_config_entry_first_refresh()
-
-    entry.runtime_data = EasyControlXRuntimeData(client=client, coordinator=coordinator)
+    # Subscribe before the first network wait so updated options are not lost.
     reload_settings = (entry.data, entry.options, entry.title, entry.unique_id)
 
     async def async_reload_changed_settings(
@@ -76,6 +74,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: EasyControlXConfigEntry)
         await async_reload_entry(hass, updated_entry)
 
     entry.async_on_unload(entry.add_update_listener(async_reload_changed_settings))
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = EasyControlXRuntimeData(client=client, coordinator=coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
