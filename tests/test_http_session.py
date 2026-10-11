@@ -160,23 +160,24 @@ async def test_redirect_does_not_forward_access_token_to_another_origin(tls_mate
 
 
 @pytest.mark.parametrize(
-    ("operation", "arguments", "path", "payload", "query"),
+    ("operation", "arguments", "options", "path", "payload", "query"),
     [
-        ("async_post_power", ("Lock", True), "/api/v1/actions/power",
+        ("async_post_power", ("Lock", True), {}, "/api/v1/actions/power",
          {"action": "Lock", "confirmed": True}, {}),
-        ("async_post_media", ("PlayPause",), "/api/v1/actions/media",
+        ("async_post_media", ("PlayPause",), {}, "/api/v1/actions/media",
          {"action": "PlayPause"}, {}),
-        ("async_post_audio", ("SetOutputVolume", 35), "/api/v1/actions/audio",
+        ("async_post_audio", ("SetOutputVolume", 35), {}, "/api/v1/actions/audio",
          {"action": "SetOutputVolume", "value": 35}, {}),
-        ("async_post_process", ("CloseMainWindow",), "/api/v1/actions/process",
+        ("async_post_process", ("CloseMainWindow",), {"process_name": " fixture-process "},
+         "/api/v1/actions/process",
          {"action": "CloseMainWindow", "processId": None,
-          "processName": None, "allowMultipleMatches": False}, {}),
-        ("async_get_files_browse", (" C:\\Users\\Public ",), "/api/v1/files/browse",
+          "processName": "fixture-process", "allowMultipleMatches": False}, {}),
+        ("async_get_files_browse", (" C:\\Users\\Public ",), {}, "/api/v1/files/browse",
          None, {"path": "C:\\Users\\Public"}),
     ],
 )
 async def test_host_action_and_browse_requests_preserve_wire_contract(
-    tls_material, operation, arguments, path, payload, query
+    tls_material, operation, arguments, options, path, payload, query
 ):
     """Send supported client operations through a real pinned HTTPS connection."""
     requests = []
@@ -195,7 +196,7 @@ async def test_host_action_and_browse_requests_preserve_wire_contract(
         client = EasyControlXApiClient(
             session, base_url, "fixture-only-token", tls_material[1]
         )
-        assert await getattr(client, operation)(*arguments) == {"accepted": True}
+        assert await getattr(client, operation)(*arguments, **options) == {"accepted": True}
         assert requests == [(
             "POST" if payload is not None else "GET", path,
             "fixture-only-token", payload, query,
