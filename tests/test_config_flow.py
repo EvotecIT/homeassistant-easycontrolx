@@ -38,6 +38,8 @@ from custom_components.easycontrolx.exceptions import (
     TLSFingerprintMismatch,
 )
 
+pytestmark = pytest.mark.usefixtures("mock_flow_entry_setup")
+
 BASE_URL = "https://studio-pc.example.test:7443"
 DEVICE_URL = f"{BASE_URL}/api/v1/device"
 STATUS_URL = f"{BASE_URL}/api/v1/status"

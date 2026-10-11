@@ -14,9 +14,34 @@ from custom_components.easycontrolx.exceptions import (
     TLSFingerprintMismatch,
 )
 
+pytestmark = pytest.mark.usefixtures("mock_flow_entry_setup")
+
 BASE_URL = "https://host.example.test:7443"
 DEVICE = {"deviceId": "device-123", "name": "Test host", "platform": "Windows"}
 PIN = "A1" * 32
+
+
+@pytest.mark.parametrize(
+    ("step", "reason"),
+    [
+        ("pair", "pairing_not_started"),
+        ("pair_transport_repair", "pairing_not_started"),
+        ("pairing_retry", "pairing_failed"),
+    ],
+)
+async def test_pairing_steps_without_a_session_abort_before_network(hass, step, reason):
+    """HA flow dispatch cannot skip creating and approving a pairing session."""
+    with patch(
+        "custom_components.easycontrolx.config_flow._async_build_client",
+        new_callable=AsyncMock,
+    ) as build:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": step}, data={"verification_code": "123456"}
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert hass.config_entries.async_entries(DOMAIN) == []
+    build.assert_not_awaited()
 
 
 @pytest.mark.parametrize(
