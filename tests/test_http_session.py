@@ -157,3 +157,83 @@ async def test_redirect_does_not_forward_access_token_to_another_origin(tls_mate
             assert received_tokens == []
             assert isinstance(error, ApiError)
             assert not session.closed
+
+
+@pytest.mark.parametrize(
+    ("operation", "arguments", "options", "path", "payload", "query"),
+    [
+        ("async_post_power", ("Lock", True), {}, "/api/v1/actions/power",
+         {"action": "Lock", "confirmed": True}, {}),
+        ("async_post_media", ("PlayPause",), {}, "/api/v1/actions/media",
+         {"action": "PlayPause"}, {}),
+        ("async_post_audio", ("SetOutputVolume", 35), {}, "/api/v1/actions/audio",
+         {"action": "SetOutputVolume", "value": 35}, {}),
+        ("async_post_process", ("CloseMainWindow",), {"process_name": " fixture-process "},
+         "/api/v1/actions/process",
+         {"action": "CloseMainWindow", "processId": None,
+          "processName": "fixture-process", "allowMultipleMatches": False}, {}),
+        ("async_get_files_browse", (" C:\\Users\\Public ",), {}, "/api/v1/files/browse",
+         None, {"path": "C:\\Users\\Public"}),
+    ],
+)
+async def test_host_action_and_browse_requests_preserve_wire_contract(
+    tls_material, operation, arguments, options, path, payload, query
+):
+    """Send supported client operations through a real pinned HTTPS connection."""
+    requests = []
+
+    async def handler(request):
+        requests.append((
+            request.method, request.path, request.headers.get(TOKEN_HEADER),
+            await request.json() if request.can_read_body else None, dict(request.query),
+        ))
+        return web.json_response({"accepted": True})
+
+    async with (
+        local_server(tls_material, handler) as base_url,
+        ClientSession() as session,
+    ):
+        client = EasyControlXApiClient(
+            session, base_url, "fixture-only-token", tls_material[1]
+        )
+        assert await getattr(client, operation)(*arguments, **options) == {"accepted": True}
+        assert requests == [(
+            "POST" if payload is not None else "GET", path,
+            "fixture-only-token", payload, query,
+        )]
+        assert not session.closed
+
+
+@pytest.mark.parametrize(
+    ("operation", "arguments", "dimensions", "path", "query"),
+    [
+        ("async_get_desktop_preview", ("monitor-two",),
+         {"max_width": 640, "max_height": 360}, "/api/v1/desktop/preview",
+         {"maxWidth": "640", "maxHeight": "360", "monitorId": "monitor-two"}),
+        ("async_get_window_preview", ("window-one",),
+         {"max_width": 480, "max_height": 270}, "/api/v1/windows/window-one/preview",
+         {"maxWidth": "480", "maxHeight": "270"}),
+    ],
+)
+async def test_previews_return_exact_image_bytes_and_requested_target(
+    tls_material, operation, arguments, dimensions, path, query
+):
+    """Preview consumers receive binary payloads without text/JSON conversion."""
+    image = b"\xff\xd8fixture-preview\xff\xd9"
+    requests = []
+
+    async def handler(request):
+        requests.append((request.method, request.path, request.headers.get(TOKEN_HEADER),
+                         dict(request.query)))
+        return web.Response(body=image, content_type="image/jpeg")
+
+    async with (
+        local_server(tls_material, handler) as base_url,
+        ClientSession() as session,
+    ):
+        client = EasyControlXApiClient(
+            session, base_url, "fixture-only-token", tls_material[1]
+        )
+        assert await getattr(client, operation)(*arguments, **dimensions) == image
+        assert requests == [("GET", path, "fixture-only-token", query)]
+        assert not session.closed
