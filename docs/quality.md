@@ -17,7 +17,7 @@ contract or applicability audit. Exemptions require a rule-permitted explanation
 | appropriate-polling | Partial | Coordinator interval and options exist; measure normal/offline request counts. |
 | brands | Review | Verify installed HA/HACS branding assets. |
 | common-modules | Partial | API, coordinator, entity, capability, and managed-service owners exist; inspect remaining duplication. |
-| config-flow-test-coverage | Gap | The 221-test minimum-HA run covers 313/320 flow statements (97.8%). Discovery tests reject incomplete host/port advertisements before creating a client or pairing. The unused setup-helper reconfiguration branch was removed; public reconfiguration retains its own tested identity validation and update path. IPv6, post-approval token rejection, changed host identity, certificate repair, discovery trust and options persistence have contract checks. Seven defensive statements remain uncovered; full flow qualification is incomplete. |
+| config-flow-test-coverage | Source verified | All 317 flow statements and 68 branches are covered on HA 2026.3.0 and 2026.9.4, with no flow exclusions. Public HA flows cover setup, reauthentication, reconfiguration, options, identity checks, certificate repair and pairing recovery. Direct dispatch to a pairing step without a session aborts before network access. Validated pairing state is passed explicitly to internal helpers, and reauthentication reads the entry through HA's owner. See [flow tests](../tests/test_config_flow.py) and [pairing recovery tests](../tests/test_pairing_recovery.py). Installed frontend and release qualification remain separate. |
 | config-flow | Partial | UI, discovery, pairing, and token flows have tests; verify actual installed UI. |
 | dependency-transparency | Partial | Host contract and HTTPS boundary are documented; inspect shipped requirements and network behaviour. |
 | docs-actions | Partial | Automation guide exists; validate each supported action and its parameters. |
@@ -30,7 +30,7 @@ contract or applicability audit. Exemptions require a rule-permitted explanation
 | entity-unique-id | Partial | Device-based identifiers exist; verify host address changes and upgrades preserve them. |
 | has-entity-name | Partial | Shared entity metadata exists; audit primary and companion names. |
 | runtime-data | Partial | Typed entry-owned client/coordinator are published after first refresh. Real HA tests verify offline setup has no runtime or entities and repeated reloads replace the owner without changing entity IDs. Failed platform unloading retains the existing runtime owner; failed forwarding recovers with a fresh owner. Installed-host resource qualification remains open. |
-| test-before-configure | Partial | Host validation, pairing, fingerprint, and authentication tests exist; finish flow coverage. |
+| test-before-configure | Partial | Public HA flow tests verify device identity, authentication and certificate trust before creating an entry. Real-host onboarding and installed-release proof remain open. |
 | test-before-setup | Partial | Real HA tests prove offline startup enters SETUP_RETRY without runtime or registry entities; reloading after connection recovery creates a healthy owner. Installed-host proof remains open. |
 | unique-config-entry | Partial | Duplicate/identity checks exist; cover all supported discovery/manual combinations. |
 
@@ -47,7 +47,7 @@ contract or applicability audit. Exemptions require a rule-permitted explanation
 | log-when-unavailable | Review | Inspect one disconnect/reconnect cycle for useful non-repeating logging. |
 | parallel-updates | Partial | Buttons and switches declare one parallel update per platform and entry; coordinator-state platforms declare zero. A real HA multi-button action reproduces overlapping commands before the change and verifies serialization afterward. Integration-wide actions, polling, and camera image requests are outside this semaphore. |
 | reauthentication-flow | Partial | Reauth and certificate-change checks have tests; verify actual UI and credential replacement. |
-| test-coverage | Gap | 221 tests pass on minimum/current HA. The preceding integration-wide measurement records statement coverage of 97.4% (1,240/1,273), with 88.6% branch coverage (209/236), including 100% of camera and shared error-translation behavior. The newer flow-only measurement does not replace that integration-wide baseline. Remaining meaningful module and flow paths still need qualification. |
+| test-coverage | Gap | 244 tests pass on both supported HA lanes. The full integration measurement covers 1,256/1,277 statements (98.36%) and 213/230 branches (92.61%), including full flow statement and branch coverage. The API client (135/143 statements) and coordinator (32/34) are still below the above-95% module target; the aggregate percentage does not qualify those modules. Flow-only tests isolate entry setup so they cannot start an unrelated host connection after creating an entry; lifecycle tests exercise real setup separately. |
 
 ## Gold
 
