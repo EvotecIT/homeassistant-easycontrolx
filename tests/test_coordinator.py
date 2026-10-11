@@ -5,8 +5,11 @@ from unittest.mock import AsyncMock
 import pytest
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
+from custom_components.easycontrolx.api import EasyControlXApiClient
 from custom_components.easycontrolx.coordinator import EasyControlXCoordinator
 from custom_components.easycontrolx.exceptions import (
+    ApiError,
+    CannotConnect,
     TLSCertificateUntrusted,
     TLSFingerprintMismatch,
 )
@@ -50,6 +53,32 @@ async def test_certificate_rotation_starts_reauthentication() -> None:
         if isinstance(client.async_get_status.side_effect, TLSCertificateUntrusted)
         else "certificate_changed"
     )
+
+
+@pytest.mark.parametrize("error", [CannotConnect, ApiError])
+async def test_optional_inventory_failure_keeps_status_available_and_recovers(hass, error):
+    """A transient optional endpoint failure must not discard core host status."""
+    status = {
+        "device": {"capabilities": ["windows.services.list"]},
+        "services": {"itemCount": 1},
+    }
+    client = AsyncMock(spec=EasyControlXApiClient)
+    client.async_get_status.side_effect = lambda: dict(status)
+    client.async_get_services.side_effect = [error("unavailable"), {"services": []}]
+    coordinator = EasyControlXCoordinator(hass, client)
+
+    await coordinator.async_refresh()
+
+    assert coordinator.last_update_success
+    assert coordinator.data == status
+    assert "serviceInventory" not in coordinator.data
+
+    await coordinator.async_refresh()
+
+    assert coordinator.last_update_success
+    assert coordinator.data == {**status, "serviceInventory": {"services": []}}
+    assert client.async_get_status.await_count == 2
+    assert client.async_get_services.await_count == 2
 
 
 @pytest.mark.asyncio
