@@ -2,9 +2,10 @@
 
 ![EasyControlX for Home Assistant](assets/homeassistant-easycontrolx-social.png)
 
-[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://hacs.xyz/)
+[![Marketplace Custom](https://img.shields.io/badge/Marketplace-Custom-41BDF5.svg?style=for-the-badge)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=EvotecIT&repository=homeassistant-easycontrolx&category=integration)
 [![CI](https://img.shields.io/github/actions/workflow/status/EvotecIT/homeassistant-easycontrolx/ci.yml?branch=main&style=for-the-badge&label=CI)](https://github.com/EvotecIT/homeassistant-easycontrolx/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/EvotecIT/homeassistant-easycontrolx?style=for-the-badge)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/EvotecIT/homeassistant-easycontrolx?style=for-the-badge)](https://github.com/EvotecIT/homeassistant-easycontrolx/stargazers)
 
 ## Overview
 
@@ -36,6 +37,7 @@ Other integrations and dashboards we maintain:
 - [KEF](https://github.com/EvotecIT/homeassistant-kef) — Local control for modern and legacy speaker families.
 - [Devialet](https://github.com/EvotecIT/homeassistant-devialet) — Local speaker control, with Dione support.
 - [Siegenia](https://github.com/EvotecIT/homeassistant-siegenia) — Local control for supported window controllers.
+- [Waste Pickup Planner](https://github.com/EvotecIT/lovelace-waste-pickup-planner) — Waste collection dates, bin overviews, cards, and badges.
 
 For a native app connected to the same Home Assistant setup:
 
@@ -48,7 +50,22 @@ Neither app is required to use this project.
 
 ## Installation
 
-### HACS
+### Home Assistant 2026.11 and newer
+
+[![Open this repository in the Marketplace](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=EvotecIT&repository=homeassistant-easycontrolx&category=integration)
+
+1. Open **Settings → Marketplace → Add from link** and enter
+   `https://github.com/EvotecIT/homeassistant-easycontrolx`.
+2. Connect GitHub when prompted. This project is a custom repository, so a
+   GitHub connection is required.
+3. Select **Install**, then complete the **EasyControlX** setup flow.
+A first installation can open setup without a restart. For updates, follow the
+restart prompt shown by Home Assistant.
+
+Existing HACS installations migrate automatically when Home Assistant upgrades
+to 2026.11. The repository metadata remains in `hacs.json`.
+
+### Home Assistant 2026.10 and older: HACS
 
 [![Open this repository in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=EvotecIT&repository=homeassistant-easycontrolx&category=integration)
 
