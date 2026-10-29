@@ -99,6 +99,21 @@ host permits changes to the item it reports.
 
 See [the entity model](ENTITY_MODEL.md) for the detailed mapping.
 
+## Remove the integration
+
+1. Disable or update automations and dashboard cards that use the host's entities.
+2. Open **Settings → Devices & services → EasyControlX**, open the host entry's
+   menu, and choose **Delete**. Repeat for other hosts you want to remove.
+3. After deleting all EasyControlX entries, uninstall the project through
+   **Settings → Marketplace** on HA 2026.11 or newer, or through HACS on older HA
+   versions. For a manual installation, remove
+   `config/custom_components/easycontrolx`. Follow Home Assistant's restart prompt.
+
+Removing the integration does not uninstall or stop the EasyControlX host, and
+does not revoke the controller token on that host. Revoke the token on the host
+if it is no longer needed. Home Assistant history, backups, and exported
+diagnostics are separate from the saved connection entry.
+
 ## Troubleshooting
 
 | Symptom | Check |
