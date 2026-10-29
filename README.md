@@ -7,6 +7,8 @@
 [![License](https://img.shields.io/github/license/EvotecIT/homeassistant-easycontrolx?style=for-the-badge)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/EvotecIT/homeassistant-easycontrolx?style=for-the-badge)](https://github.com/EvotecIT/homeassistant-easycontrolx/stargazers)
 
+Requires **Home Assistant 2026.3.0 or newer**.
+
 ## Overview
 
 Connect an EasyControlX host to Home Assistant over HTTPS. Use host status,
@@ -59,6 +61,7 @@ Neither app is required to use this project.
 2. Connect GitHub when prompted. This project is a custom repository, so a
    GitHub connection is required.
 3. Select **Install**, then complete the **EasyControlX** setup flow.
+
 A first installation can open setup without a restart. For updates, follow the
 restart prompt shown by Home Assistant.
 
@@ -104,6 +107,7 @@ approval. See [configuration and migration](docs/configuration.md).
 
 | I want to… | Guide |
 | --- | --- |
+| Remove a host or uninstall | [Removal instructions](docs/configuration.md#remove-the-integration) |
 | Pair a host, change connection settings, or migrate from HTTP | [Configuration](docs/configuration.md) |
 | Use buttons and services in automations | [Automations](docs/automations.md) |
 | Understand which entities my host provides | [Entity model](docs/ENTITY_MODEL.md) |
